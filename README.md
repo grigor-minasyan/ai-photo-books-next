@@ -18,6 +18,33 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
+## Database (Drizzle + Postgres)
+
+1. Copy `.env.example` to `.env` and set `DATABASE_URL`.
+2. Generate migration files:
+
+```bash
+bun run db:generate
+```
+
+3. Apply migrations:
+
+```bash
+bun run db:migrate
+```
+
+4. Seed initial AI book data (products, pages, prompts, characters, generated source books):
+
+```bash
+bun run db:seed
+```
+
+Optional:
+
+```bash
+bun run db:studio
+```
+
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
 ## Learn More
