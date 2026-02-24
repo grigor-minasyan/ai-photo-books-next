@@ -91,7 +91,10 @@ export const bookProductPages = pgTable(
       table.pageNumber,
     ),
     index("book_product_pages_product_idx").on(table.bookProductId),
-    check("book_product_pages_page_number_positive", sql`${table.pageNumber} > 0`),
+    check(
+      "book_product_pages_page_number_positive",
+      sql`${table.pageNumber} > 0`,
+    ),
   ],
 );
 
@@ -201,19 +204,25 @@ export const generatedBookPages = pgTable(
       table.generatedBookId,
       table.pageNumber,
     ),
-    check("generated_book_pages_page_number_positive", sql`${table.pageNumber} > 0`),
+    check(
+      "generated_book_pages_page_number_positive",
+      sql`${table.pageNumber} > 0`,
+    ),
     index("generated_book_pages_book_idx").on(table.generatedBookId),
   ],
 );
 
-export const bookProductsRelations = relations(bookProducts, ({ many, one }) => ({
-  pages: many(bookProductPages),
-  generatedBooks: many(generatedBooks),
-  sourceGeneratedBook: one(generatedBooks, {
-    fields: [bookProducts.sourceGeneratedBookId],
-    references: [generatedBooks.id],
+export const bookProductsRelations = relations(
+  bookProducts,
+  ({ many, one }) => ({
+    pages: many(bookProductPages),
+    generatedBooks: many(generatedBooks),
+    sourceGeneratedBook: one(generatedBooks, {
+      fields: [bookProducts.sourceGeneratedBookId],
+      references: [generatedBooks.id],
+    }),
   }),
-}));
+);
 
 export const bookProductPagesRelations = relations(
   bookProductPages,
@@ -229,18 +238,21 @@ export const charactersRelations = relations(characters, ({ many }) => ({
   generatedBooks: many(generatedBooks),
 }));
 
-export const generatedBooksRelations = relations(generatedBooks, ({ one, many }) => ({
-  bookProduct: one(bookProducts, {
-    fields: [generatedBooks.bookProductId],
-    references: [bookProducts.id],
+export const generatedBooksRelations = relations(
+  generatedBooks,
+  ({ one, many }) => ({
+    bookProduct: one(bookProducts, {
+      fields: [generatedBooks.bookProductId],
+      references: [bookProducts.id],
+    }),
+    character: one(characters, {
+      fields: [generatedBooks.characterId],
+      references: [characters.id],
+    }),
+    pages: many(generatedBookPages),
+    sourcedByProducts: many(bookProducts),
   }),
-  character: one(characters, {
-    fields: [generatedBooks.characterId],
-    references: [characters.id],
-  }),
-  pages: many(generatedBookPages),
-  sourcedByProducts: many(bookProducts),
-}));
+);
 
 export const generatedBookPagesRelations = relations(
   generatedBookPages,

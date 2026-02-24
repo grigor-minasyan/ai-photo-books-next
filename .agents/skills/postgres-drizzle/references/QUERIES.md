@@ -10,18 +10,18 @@ Comprehensive reference for querying PostgreSQL with Drizzle ORM.
 
 ```typescript
 import {
-  eq,           // =
-  ne,           // <>
-  gt,           // >
-  gte,          // >=
-  lt,           // <
-  lte,          // <=
-  like,         // LIKE (case-sensitive)
-  ilike,        // ILIKE (case-insensitive)
+  eq, // =
+  ne, // <>
+  gt, // >
+  gte, // >=
+  lt, // <
+  lte, // <=
+  like, // LIKE (case-sensitive)
+  ilike, // ILIKE (case-insensitive)
   notLike,
   notIlike,
-  inArray,      // IN
-  notInArray,   // NOT IN
+  inArray, // IN
+  notInArray, // NOT IN
   isNull,
   isNotNull,
   between,
@@ -35,7 +35,7 @@ import {
   arrayContained,
   arrayOverlaps,
   sql,
-} from 'drizzle-orm';
+} from "drizzle-orm";
 ```
 
 ---
@@ -49,56 +49,50 @@ import {
 const allUsers = await db.select().from(users);
 
 // Specific columns
-const emails = await db.select({
-  id: users.id,
-  email: users.email
-}).from(users);
+const emails = await db
+  .select({
+    id: users.id,
+    email: users.email,
+  })
+  .from(users);
 
 // With alias
-const result = await db.select({
-  identifier: users.id,
-  mail: users.email,
-}).from(users);
+const result = await db
+  .select({
+    identifier: users.id,
+    mail: users.email,
+  })
+  .from(users);
 ```
 
 ### Where Clause
 
 ```typescript
 // Single condition
-const user = await db
-  .select()
-  .from(users)
-  .where(eq(users.id, userId));
+const user = await db.select().from(users).where(eq(users.id, userId));
 
 // Multiple conditions (AND)
 const activeAdmins = await db
   .select()
   .from(users)
-  .where(and(
-    eq(users.status, 'active'),
-    eq(users.role, 'admin'),
-  ));
+  .where(and(eq(users.status, "active"), eq(users.role, "admin")));
 
 // OR conditions
 const flaggedUsers = await db
   .select()
   .from(users)
-  .where(or(
-    eq(users.status, 'suspended'),
-    gt(users.warningCount, 3),
-  ));
+  .where(or(eq(users.status, "suspended"), gt(users.warningCount, 3)));
 
 // Complex nested conditions
 const result = await db
   .select()
   .from(users)
-  .where(and(
-    eq(users.status, 'active'),
-    or(
-      eq(users.role, 'admin'),
-      gt(users.score, 100),
+  .where(
+    and(
+      eq(users.status, "active"),
+      or(eq(users.role, "admin"), gt(users.score, 100)),
     ),
-  ));
+  );
 ```
 
 ### Comparison Operators
@@ -161,21 +155,17 @@ async function getPosts(filters: Filters) {
   return db
     .select()
     .from(posts)
-    .where(and(
-      eq(posts.published, true),
-      filters.search
-        ? ilike(posts.title, `%${filters.search}%`)
-        : undefined,
-      filters.categoryId
-        ? eq(posts.categoryId, filters.categoryId)
-        : undefined,
-      filters.minPrice
-        ? gte(posts.price, filters.minPrice)
-        : undefined,
-      filters.maxPrice
-        ? lte(posts.price, filters.maxPrice)
-        : undefined,
-    ));
+    .where(
+      and(
+        eq(posts.published, true),
+        filters.search ? ilike(posts.title, `%${filters.search}%`) : undefined,
+        filters.categoryId
+          ? eq(posts.categoryId, filters.categoryId)
+          : undefined,
+        filters.minPrice ? gte(posts.price, filters.minPrice) : undefined,
+        filters.maxPrice ? lte(posts.price, filters.maxPrice) : undefined,
+      ),
+    );
 }
 ```
 
@@ -318,22 +308,20 @@ const result = await db
 ### Imports
 
 ```typescript
-import { count, sum, avg, min, max, countDistinct } from 'drizzle-orm';
+import { count, sum, avg, min, max, countDistinct } from "drizzle-orm";
 ```
 
 ### Basic Aggregates
 
 ```typescript
 // Count all rows
-const [{ total }] = await db
-  .select({ total: count() })
-  .from(users);
+const [{ total }] = await db.select({ total: count() }).from(users);
 
 // Count with condition
 const [{ activeCount }] = await db
   .select({ activeCount: count() })
   .from(users)
-  .where(eq(users.status, 'active'));
+  .where(eq(users.status, "active"));
 
 // Count distinct
 const [{ uniqueAuthors }] = await db
@@ -409,11 +397,11 @@ const authorStats = await db
 const subquery = db
   .select({
     authorId: posts.authorId,
-    postCount: sql<number>`count(*)`.as('post_count'),
+    postCount: sql<number>`count(*)`.as("post_count"),
   })
   .from(posts)
   .groupBy(posts.authorId)
-  .as('author_stats');
+  .as("author_stats");
 
 const usersWithStats = await db
   .select({
@@ -431,20 +419,14 @@ const usersWithStats = await db
 const usersWithPosts = await db
   .select()
   .from(users)
-  .where(
-    exists(
-      db.select().from(posts).where(eq(posts.authorId, users.id))
-    )
-  );
+  .where(exists(db.select().from(posts).where(eq(posts.authorId, users.id))));
 
 // Users who have NO posts
 const usersWithoutPosts = await db
   .select()
   .from(users)
   .where(
-    notExists(
-      db.select().from(posts).where(eq(posts.authorId, users.id))
-    )
+    notExists(db.select().from(posts).where(eq(posts.authorId, users.id))),
   );
 ```
 
@@ -472,8 +454,8 @@ const postsWithAuthorCount = await db
 const [newUser] = await db
   .insert(users)
   .values({
-    email: 'user@example.com',
-    name: 'John Doe',
+    email: "user@example.com",
+    name: "John Doe",
   })
   .returning();
 ```
@@ -484,9 +466,9 @@ const [newUser] = await db
 const newUsers = await db
   .insert(users)
   .values([
-    { email: 'user1@example.com', name: 'User 1' },
-    { email: 'user2@example.com', name: 'User 2' },
-    { email: 'user3@example.com', name: 'User 3' },
+    { email: "user1@example.com", name: "User 1" },
+    { email: "user2@example.com", name: "User 2" },
+    { email: "user3@example.com", name: "User 3" },
   ])
   .returning();
 ```
@@ -497,11 +479,11 @@ const newUsers = await db
 // Update on conflict
 await db
   .insert(users)
-  .values({ email: 'user@example.com', name: 'John' })
+  .values({ email: "user@example.com", name: "John" })
   .onConflictDoUpdate({
     target: users.email,
     set: {
-      name: 'John Updated',
+      name: "John Updated",
       updatedAt: new Date(),
     },
   });
@@ -509,7 +491,7 @@ await db
 // Ignore on conflict
 await db
   .insert(users)
-  .values({ email: 'user@example.com', name: 'John' })
+  .values({ email: "user@example.com", name: "John" })
   .onConflictDoNothing();
 
 // Composite key conflict
@@ -538,10 +520,7 @@ await db
 ### Basic Update
 
 ```typescript
-await db
-  .update(users)
-  .set({ status: 'active' })
-  .where(eq(users.id, userId));
+await db.update(users).set({ status: "active" }).where(eq(users.id, userId));
 ```
 
 ### Update with Returning
@@ -550,7 +529,7 @@ await db
 const [updated] = await db
   .update(users)
   .set({
-    status: 'active',
+    status: "active",
     updatedAt: new Date(),
   })
   .where(eq(users.id, userId))
@@ -581,7 +560,7 @@ await db
   .set({
     status: sql`CASE WHEN ${users.score} > 100 THEN 'gold' ELSE 'silver' END`,
   })
-  .where(eq(users.role, 'member'));
+  .where(eq(users.role, "member"));
 ```
 
 ---
@@ -591,9 +570,7 @@ await db
 ### Basic Delete
 
 ```typescript
-await db
-  .delete(users)
-  .where(eq(users.id, userId));
+await db.delete(users).where(eq(users.id, userId));
 ```
 
 ### Delete with Returning
@@ -620,12 +597,12 @@ await db
 // Delete inactive users who have no posts
 await db
   .delete(users)
-  .where(and(
-    eq(users.status, 'inactive'),
-    notExists(
-      db.select().from(posts).where(eq(posts.authorId, users.id))
+  .where(
+    and(
+      eq(users.status, "inactive"),
+      notExists(db.select().from(posts).where(eq(posts.authorId, users.id))),
     ),
-  ));
+  );
 ```
 
 ---
@@ -679,26 +656,26 @@ Improve performance by preparing queries once:
 const getUserById = db
   .select()
   .from(users)
-  .where(eq(users.id, sql.placeholder('id')))
-  .prepare('get_user_by_id');
+  .where(eq(users.id, sql.placeholder("id")))
+  .prepare("get_user_by_id");
 
 // Execute multiple times
-const user1 = await getUserById.execute({ id: 'uuid-1' });
-const user2 = await getUserById.execute({ id: 'uuid-2' });
+const user1 = await getUserById.execute({ id: "uuid-1" });
+const user2 = await getUserById.execute({ id: "uuid-2" });
 
 // Prepared insert
 const createUser = db
   .insert(users)
   .values({
-    email: sql.placeholder('email'),
-    name: sql.placeholder('name'),
+    email: sql.placeholder("email"),
+    name: sql.placeholder("name"),
   })
   .returning()
-  .prepare('create_user');
+  .prepare("create_user");
 
 const newUser = await createUser.execute({
-  email: 'user@example.com',
-  name: 'John',
+  email: "user@example.com",
+  name: "John",
 });
 ```
 
@@ -711,7 +688,7 @@ const newUser = await createUser.execute({
 ```typescript
 const result = await db.transaction(async (tx) => {
   const [user] = await tx.insert(users).values({ email, name }).returning();
-  await tx.insert(profiles).values({ userId: user.id, bio: '' });
+  await tx.insert(profiles).values({ userId: user.id, bio: "" });
   return user;
 });
 ```
@@ -755,10 +732,13 @@ await db.transaction(async (tx) => {
 ### Transaction Isolation
 
 ```typescript
-await db.transaction(async (tx) => {
-  // ...
-}, {
-  isolationLevel: 'serializable',  // read committed, repeatable read, serializable
-  accessMode: 'read write',        // read only, read write
-});
+await db.transaction(
+  async (tx) => {
+    // ...
+  },
+  {
+    isolationLevel: "serializable", // read committed, repeatable read, serializable
+    accessMode: "read write", // read only, read write
+  },
+);
 ```

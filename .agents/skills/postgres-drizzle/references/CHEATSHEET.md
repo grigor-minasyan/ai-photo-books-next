@@ -73,7 +73,7 @@ status: statusEnum('status').default('pending'),
 ## Relations
 
 ```typescript
-import { relations } from 'drizzle-orm';
+import { relations } from "drizzle-orm";
 
 // One-to-Many
 export const usersRelations = relations(users, ({ many }) => ({
@@ -90,7 +90,10 @@ export const postsRelations = relations(posts, ({ one }) => ({
 // Many-to-Many (via junction table)
 export const usersToGroupsRelations = relations(usersToGroups, ({ one }) => ({
   user: one(users, { fields: [usersToGroups.userId], references: [users.id] }),
-  group: one(groups, { fields: [usersToGroups.groupId], references: [groups.id] }),
+  group: one(groups, {
+    fields: [usersToGroups.groupId],
+    references: [groups.id],
+  }),
 }));
 ```
 
@@ -99,7 +102,7 @@ export const usersToGroupsRelations = relations(usersToGroups, ({ one }) => ({
 ## Type Inference
 
 ```typescript
-import type { InferSelectModel, InferInsertModel } from 'drizzle-orm';
+import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
 
 type User = InferSelectModel<typeof users>;
 type NewUser = InferInsertModel<typeof users>;
@@ -110,24 +113,40 @@ type NewUser = InferInsertModel<typeof users>;
 ## Query Operators
 
 ```typescript
-import { eq, ne, gt, gte, lt, lte, like, ilike, inArray, isNull,
-  isNotNull, and, or, not, between, sql } from 'drizzle-orm';
+import {
+  eq,
+  ne,
+  gt,
+  gte,
+  lt,
+  lte,
+  like,
+  ilike,
+  inArray,
+  isNull,
+  isNotNull,
+  and,
+  or,
+  not,
+  between,
+  sql,
+} from "drizzle-orm";
 
-eq(col, value)           // =
-ne(col, value)           // <>
-gt(col, value)           // >
-gte(col, value)          // >=
-lt(col, value)           // <
-lte(col, value)          // <=
-like(col, '%pat%')       // LIKE
-ilike(col, '%pat%')      // ILIKE (case-insensitive)
-inArray(col, [1,2,3])    // IN
-isNull(col)              // IS NULL
-isNotNull(col)           // IS NOT NULL
-between(col, a, b)       // BETWEEN
-and(cond1, cond2)        // AND
-or(cond1, cond2)         // OR
-not(cond)                // NOT
+eq(col, value); // =
+ne(col, value); // <>
+gt(col, value); // >
+gte(col, value); // >=
+lt(col, value); // <
+lte(col, value); // <=
+like(col, "%pat%"); // LIKE
+ilike(col, "%pat%"); // ILIKE (case-insensitive)
+inArray(col, [1, 2, 3]); // IN
+isNull(col); // IS NULL
+isNotNull(col); // IS NOT NULL
+between(col, a, b); // BETWEEN
+and(cond1, cond2); // AND
+or(cond1, cond2); // OR
+not(cond); // NOT
 ```
 
 ---
@@ -143,20 +162,26 @@ await db.select({ id: users.id }).from(users);
 await db.select().from(users).where(eq(users.id, id));
 
 // Conditional filters (undefined skips condition)
-await db.select().from(users).where(and(
-  eq(users.active, true),
-  term ? ilike(users.name, `%${term}%`) : undefined,
-));
+await db
+  .select()
+  .from(users)
+  .where(
+    and(
+      eq(users.active, true),
+      term ? ilike(users.name, `%${term}%`) : undefined,
+    ),
+  );
 
 // Order, Limit, Offset
-await db.select().from(users)
+await db
+  .select()
+  .from(users)
   .orderBy(desc(users.createdAt))
   .limit(20)
   .offset(40);
 
 // Join
-await db.select().from(users)
-  .leftJoin(posts, eq(posts.authorId, users.id));
+await db.select().from(users).leftJoin(posts, eq(posts.authorId, users.id));
 ```
 
 ---
@@ -216,28 +241,22 @@ await db.query.users.findFirst({
 
 ```typescript
 // Single
-const [user] = await db.insert(users)
-  .values({ email, name })
-  .returning();
+const [user] = await db.insert(users).values({ email, name }).returning();
 
 // Multiple
 await db.insert(users).values([
-  { email: 'a@b.com', name: 'A' },
-  { email: 'b@b.com', name: 'B' },
+  { email: "a@b.com", name: "A" },
+  { email: "b@b.com", name: "B" },
 ]);
 
 // Upsert
-await db.insert(users)
-  .values({ email, name })
-  .onConflictDoUpdate({
-    target: users.email,
-    set: { name },
-  });
+await db.insert(users).values({ email, name }).onConflictDoUpdate({
+  target: users.email,
+  set: { name },
+});
 
 // Ignore conflict
-await db.insert(users)
-  .values({ email, name })
-  .onConflictDoNothing();
+await db.insert(users).values({ email, name }).onConflictDoNothing();
 ```
 
 ---
@@ -245,18 +264,18 @@ await db.insert(users)
 ## Update
 
 ```typescript
-await db.update(users)
-  .set({ status: 'active' })
-  .where(eq(users.id, id));
+await db.update(users).set({ status: "active" }).where(eq(users.id, id));
 
 // With returning
-const [updated] = await db.update(users)
-  .set({ status: 'active' })
+const [updated] = await db
+  .update(users)
+  .set({ status: "active" })
   .where(eq(users.id, id))
   .returning();
 
 // Increment
-await db.update(posts)
+await db
+  .update(posts)
   .set({ views: sql`${posts.views} + 1` })
   .where(eq(posts.id, id));
 ```
@@ -268,9 +287,7 @@ await db.update(posts)
 ```typescript
 await db.delete(users).where(eq(users.id, id));
 
-const [deleted] = await db.delete(users)
-  .where(eq(users.id, id))
-  .returning();
+const [deleted] = await db.delete(users).where(eq(users.id, id)).returning();
 ```
 
 ---
@@ -316,9 +333,11 @@ await db.select({
 ## Prepared Statements
 
 ```typescript
-const getUser = db.select().from(users)
-  .where(eq(users.id, sql.placeholder('id')))
-  .prepare('get_user');
+const getUser = db
+  .select()
+  .from(users)
+  .where(eq(users.id, sql.placeholder("id")))
+  .prepare("get_user");
 
 const user = await getUser.execute({ id });
 ```
@@ -341,12 +360,12 @@ npx drizzle-kit check      # Verify migrations
 ## drizzle.config.ts
 
 ```typescript
-import { defineConfig } from 'drizzle-kit';
+import { defineConfig } from "drizzle-kit";
 
 export default defineConfig({
-  schema: './src/db/schema.ts',
-  out: './drizzle',
-  dialect: 'postgresql',
+  schema: "./src/db/schema.ts",
+  out: "./drizzle",
+  dialect: "postgresql",
   dbCredentials: {
     url: process.env.DATABASE_URL!,
   },
@@ -360,9 +379,9 @@ export default defineConfig({
 ### postgres.js (Recommended)
 
 ```typescript
-import { drizzle } from 'drizzle-orm/postgres-js';
-import postgres from 'postgres';
-import * as schema from './schema';
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
+import * as schema from "./schema";
 
 const client = postgres(process.env.DATABASE_URL!);
 export const db = drizzle(client, { schema });
@@ -371,9 +390,9 @@ export const db = drizzle(client, { schema });
 ### node-postgres
 
 ```typescript
-import { drizzle } from 'drizzle-orm/node-postgres';
-import { Pool } from 'pg';
-import * as schema from './schema';
+import { drizzle } from "drizzle-orm/node-postgres";
+import { Pool } from "pg";
+import * as schema from "./schema";
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 export const db = drizzle(pool, { schema });
@@ -383,23 +402,23 @@ export const db = drizzle(pool, { schema });
 
 ## Error Codes
 
-| Code | Name | Description |
-|------|------|-------------|
-| 23505 | unique_violation | Duplicate key |
-| 23503 | foreign_key_violation | FK constraint |
-| 23502 | not_null_violation | NULL in NOT NULL |
-| 23514 | check_violation | CHECK constraint |
-| 42P01 | undefined_table | Table doesn't exist |
+| Code  | Name                  | Description         |
+| ----- | --------------------- | ------------------- |
+| 23505 | unique_violation      | Duplicate key       |
+| 23503 | foreign_key_violation | FK constraint       |
+| 23502 | not_null_violation    | NULL in NOT NULL    |
+| 23514 | check_violation       | CHECK constraint    |
+| 42P01 | undefined_table       | Table doesn't exist |
 
 ---
 
 ## PostgreSQL 18 Features
 
-| Feature | Syntax |
-|---------|--------|
-| UUIDv7 | `SELECT uuidv7();` |
-| Async I/O | `SET io_method = 'worker';` |
-| Skip Scan | Automatic for B-tree |
+| Feature           | Syntax                       |
+| ----------------- | ---------------------------- |
+| UUIDv7            | `SELECT uuidv7();`           |
+| Async I/O         | `SET io_method = 'worker';`  |
+| Skip Scan         | Automatic for B-tree         |
 | RETURNING OLD/NEW | `RETURNING OLD.col, NEW.col` |
 
 ---

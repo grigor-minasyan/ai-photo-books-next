@@ -14,8 +14,9 @@ export function SiteFooter() {
         <div className="space-y-3">
           <p className="text-base font-semibold">AI Photo Books</p>
           <p className="max-w-sm text-sm text-muted-foreground">
-            Personalized storybooks where your child becomes the hero. Upload a portrait, generate a
-            character, and preview a magical book in minutes.
+            Personalized storybooks where your child becomes the hero. Upload a
+            portrait, generate a character, and preview a magical book in
+            minutes.
           </p>
         </div>
 
@@ -23,12 +24,18 @@ export function SiteFooter() {
           <p className="text-sm font-medium">Quick Links</p>
           <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
             {footerLinks.map((link) => (
-              <Link key={link.href} href={link.href} className="hover:text-foreground">
+              <Link
+                key={link.href}
+                href={link.href}
+                className="hover:text-foreground"
+              >
                 {link.label}
               </Link>
             ))}
           </div>
-          <p className="text-xs text-muted-foreground">Support: support@aiphotobooks.local</p>
+          <p className="text-xs text-muted-foreground">
+            Support: support@aiphotobooks.local
+          </p>
         </div>
       </div>
     </footer>

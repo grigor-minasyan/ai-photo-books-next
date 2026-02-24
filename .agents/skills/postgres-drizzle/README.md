@@ -4,13 +4,13 @@ PostgreSQL and Drizzle ORM best practices. This skill activates automatically wh
 
 ## Topics Covered
 
-| Category | Topics |
-|----------|--------|
-| **Schema** | Column types, constraints, indexes, enums, JSONB, relations |
-| **Queries** | Operators, joins, aggregations, subqueries, transactions |
-| **Relations** | One-to-many, many-to-many, relational queries API |
-| **Migrations** | drizzle-kit commands, workflows, configuration |
-| **PostgreSQL** | PG18 features, RLS, partitioning, full-text search |
+| Category        | Topics                                                      |
+| --------------- | ----------------------------------------------------------- |
+| **Schema**      | Column types, constraints, indexes, enums, JSONB, relations |
+| **Queries**     | Operators, joins, aggregations, subqueries, transactions    |
+| **Relations**   | One-to-many, many-to-many, relational queries API           |
+| **Migrations**  | drizzle-kit commands, workflows, configuration              |
+| **PostgreSQL**  | PG18 features, RLS, partitioning, full-text search          |
 | **Performance** | Indexing strategies, query optimization, connection pooling |
 
 ## Example Usage
@@ -38,19 +38,21 @@ PostgreSQL and Drizzle ORM best practices. This skill activates automatically wh
 ## Quick Start
 
 ```typescript
-import { pgTable, uuid, text, timestamp, index } from 'drizzle-orm/pg-core';
-import { relations } from 'drizzle-orm';
-import { drizzle } from 'drizzle-orm/postgres-js';
-import postgres from 'postgres';
+import { pgTable, uuid, text, timestamp, index } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
 
 // Schema
-export const users = pgTable('users', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  email: text('email').notNull().unique(),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-}, (table) => [
-  index('users_email_idx').on(table.email),
-]);
+export const users = pgTable(
+  "users",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    email: text("email").notNull().unique(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  },
+  (table) => [index("users_email_idx").on(table.email)],
+);
 
 // Connection
 const client = postgres(process.env.DATABASE_URL!);
@@ -58,7 +60,7 @@ export const db = drizzle(client, { schema: { users } });
 
 // Query
 const user = await db.query.users.findFirst({
-  where: eq(users.email, 'user@example.com'),
+  where: eq(users.email, "user@example.com"),
 });
 ```
 

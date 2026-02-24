@@ -7,12 +7,21 @@ type BookProductCardProps = {
   coverImagePath: string;
 };
 
-export function BookProductCard({ slug, title, coverImagePath }: BookProductCardProps) {
+export function BookProductCard({
+  slug,
+  title,
+  coverImagePath,
+}: BookProductCardProps) {
   return (
     <article className="overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm">
       <Link href={`/books/${slug}`} className="block">
         <div className="relative aspect-4/5 w-full bg-muted">
-          <Image src={coverImagePath} alt={title} fill className="object-cover" />
+          <Image
+            src={coverImagePath}
+            alt={title}
+            fill
+            className="object-cover"
+          />
         </div>
       </Link>
 

@@ -1,7 +1,12 @@
 import { and, asc, eq } from "drizzle-orm";
 
 import { db } from "@/lib/db/client";
-import { bookProductPages, bookProducts, generatedBookPages, generatedBooks } from "@/lib/db/schema";
+import {
+  bookProductPages,
+  bookProducts,
+  generatedBookPages,
+  generatedBooks,
+} from "@/lib/db/schema";
 
 const IMAGE_PLACEHOLDER_PATH = "/file.svg";
 
@@ -29,7 +34,9 @@ export type HomepageBookProduct = {
   rawCoverImagePath: string | null;
 };
 
-export async function listHomepageBookProducts(): Promise<HomepageBookProduct[]> {
+export async function listHomepageBookProducts(): Promise<
+  HomepageBookProduct[]
+> {
   const rows = await db
     .select({
       id: bookProducts.id,
@@ -38,7 +45,10 @@ export async function listHomepageBookProducts(): Promise<HomepageBookProduct[]>
       rawCoverImagePath: generatedBooks.coverImagePath,
     })
     .from(bookProducts)
-    .leftJoin(generatedBooks, eq(bookProducts.sourceGeneratedBookId, generatedBooks.id))
+    .leftJoin(
+      generatedBooks,
+      eq(bookProducts.sourceGeneratedBookId, generatedBooks.id),
+    )
     .where(eq(bookProducts.isActive, true))
     .orderBy(asc(bookProducts.createdAt));
 
@@ -73,7 +83,9 @@ export type BookProductDetails = {
   }>;
 };
 
-export async function getBookProductBySlug(slug: string): Promise<BookProductDetails | null> {
+export async function getBookProductBySlug(
+  slug: string,
+): Promise<BookProductDetails | null> {
   const [productRow] = await db
     .select({
       id: bookProducts.id,
@@ -86,7 +98,10 @@ export async function getBookProductBySlug(slug: string): Promise<BookProductDet
       rawCoverImagePath: generatedBooks.coverImagePath,
     })
     .from(bookProducts)
-    .leftJoin(generatedBooks, eq(bookProducts.sourceGeneratedBookId, generatedBooks.id))
+    .leftJoin(
+      generatedBooks,
+      eq(bookProducts.sourceGeneratedBookId, generatedBooks.id),
+    )
     .where(and(eq(bookProducts.slug, slug), eq(bookProducts.isActive, true)))
     .limit(1);
 
@@ -115,7 +130,12 @@ export async function getBookProductBySlug(slug: string): Promise<BookProductDet
           imageDescription: generatedBookPages.imageDescription,
         })
         .from(generatedBookPages)
-        .where(eq(generatedBookPages.generatedBookId, productRow.sourceGeneratedBookId))
+        .where(
+          eq(
+            generatedBookPages.generatedBookId,
+            productRow.sourceGeneratedBookId,
+          ),
+        )
         .orderBy(asc(generatedBookPages.pageNumber))
     : [];
 

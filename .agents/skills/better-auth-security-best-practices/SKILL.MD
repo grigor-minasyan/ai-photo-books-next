@@ -18,6 +18,7 @@ export const auth = betterAuth({
 ```
 
 Better Auth looks for secrets in this order:
+
 1. `options.secret` in your config
 2. `BETTER_AUTH_SECRET` environment variable
 3. `AUTH_SECRET` environment variable
@@ -25,6 +26,7 @@ Better Auth looks for secrets in this order:
 ### Secret Requirements
 
 Better Auth validates your secret and will:
+
 - **Reject** default/placeholder secrets in production
 - **Warn** if the secret is shorter than 32 characters
 - **Warn** if entropy is below 120 bits
@@ -95,6 +97,7 @@ rateLimit: {
 ### Per-Endpoint Rules
 
 Better Auth applies stricter limits to sensitive endpoints by default:
+
 - `/sign-in`, `/sign-up`, `/change-password`, `/change-email`: 3 requests per 10 seconds
 
 Override or customize rules for specific paths:
@@ -138,6 +141,7 @@ export const auth = betterAuth({
 ### Fetch Metadata Blocking
 
 Better Auth automatically blocks requests where:
+
 - `Sec-Fetch-Site: cross-site` AND
 - `Sec-Fetch-Mode: navigate` AND
 - `Sec-Fetch-Dest: document`
@@ -155,10 +159,7 @@ import { betterAuth } from "better-auth";
 
 export const auth = betterAuth({
   baseURL: "https://api.example.com",
-  trustedOrigins: [
-    "https://app.example.com",
-    "https://admin.example.com",
-  ],
+  trustedOrigins: ["https://app.example.com", "https://admin.example.com"],
 });
 ```
 
@@ -181,7 +182,7 @@ trustedOrigins: [
   "*.example.com", // Matches any subdomain
   "https://*.example.com", // Protocol-specific wildcard
   "exp://192.168.*.*:*/*", // Custom schemes (e.g., Expo)
-]
+];
 ```
 
 ### Dynamic Trusted Origins
@@ -193,18 +194,19 @@ trustedOrigins: async (request) => {
   // Validate against database, header, etc.
   const tenant = getTenantFromRequest(request);
   return [`https://${tenant}.myapp.com`];
-}
+};
 ```
 
 ### What Gets Validated
 
 Better Auth validates these URL parameters against trusted origins:
+
 - `callbackURL` - Where to redirect after authentication
 - `redirectTo` - General redirect parameter
 - `errorCallbackURL` - Where to redirect on errors
 - `newUserCallbackURL` - Where to redirect new users
 - `origin` - Request origin header
-- and more... 
+- and more...
 
 Invalid URLs receive a 403 Forbidden response.
 
@@ -256,7 +258,6 @@ session: {
 - **`jwe`**: A256CBC-HS512 encrypted (largest, encrypted)
 
 **Note**: Use `jwe` strategy when session data contains sensitive information that shouldn't be readable client-side.
-
 
 ## Cookie Security
 
@@ -350,6 +351,7 @@ export const auth = betterAuth({
 ```
 
 State tokens:
+
 - Are 32-character random strings
 - Expire after 10 minutes
 - Contain callback URLs and PKCE verifier (encrypted)
@@ -556,11 +558,8 @@ import { betterAuth } from "better-auth";
 export const auth = betterAuth({
   secret: process.env.BETTER_AUTH_SECRET,
   baseURL: "https://api.example.com",
-  trustedOrigins: [
-    "https://app.example.com",
-    "https://*.preview.example.com",
-  ],
-  
+  trustedOrigins: ["https://app.example.com", "https://*.preview.example.com"],
+
   // Rate limiting
   rateLimit: {
     enabled: true,
@@ -570,7 +569,7 @@ export const auth = betterAuth({
       "/api/auth/sign-up/email": { window: 60, max: 3 },
     },
   },
-  
+
   // Session security
   session: {
     expiresIn: 60 * 60 * 24 * 7, // 7 days
@@ -582,14 +581,13 @@ export const auth = betterAuth({
       strategy: "jwe", // Encrypted session data
     },
   },
-  
+
   // OAuth security
   account: {
     encryptOAuthTokens: true,
     storeStateStrategy: "cookie",
   },
-  
-  
+
   // Advanced settings
   advanced: {
     useSecureCookies: true,
@@ -605,7 +603,7 @@ export const auth = betterAuth({
       handler: (promise) => waitUntil(promise),
     },
   },
-  
+
   // Security auditing
   databaseHooks: {
     session: {

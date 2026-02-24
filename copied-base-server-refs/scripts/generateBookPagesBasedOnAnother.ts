@@ -48,7 +48,10 @@ async function generateAndSavePageBasedOnAnother(task: GenerationTask) {
   await ensureDirectoryExists(pagePaths.withTextDir);
 
   // Skip if both files already exist
-  if (existsSync(pagePaths.originalPath) && existsSync(pagePaths.withTextPath)) {
+  if (
+    existsSync(pagePaths.originalPath) &&
+    existsSync(pagePaths.withTextPath)
+  ) {
     console.log(
       `Skipping ${pagePaths.filename} for ${task.characterId} - already exists`,
     );
@@ -131,8 +134,14 @@ async function main() {
   );
 
   // First, verify that all base character images exist
-  console.log(`Checking if base character (${BASE_CHARACTER_ID}) images exist...`);
-  const baseCheck = checkFilesExist(BOOK_INDEX, BASE_CHARACTER_ID, END_PAGE + 1);
+  console.log(
+    `Checking if base character (${BASE_CHARACTER_ID}) images exist...`,
+  );
+  const baseCheck = checkFilesExist(
+    BOOK_INDEX,
+    BASE_CHARACTER_ID,
+    END_PAGE + 1,
+  );
 
   if (!baseCheck.allExist) {
     console.error(

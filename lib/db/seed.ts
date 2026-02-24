@@ -1,6 +1,9 @@
 import { eq } from "drizzle-orm";
 
-import { CHARACTER_MAP, generatedBooks } from "../../copied-base-server-refs/src/constants";
+import {
+  CHARACTER_MAP,
+  generatedBooks,
+} from "../../copied-base-server-refs/src/constants";
 import { db } from "./client";
 import {
   bookProductPages,
@@ -96,7 +99,6 @@ async function seedBookProductsAndPages() {
         });
     }
   }
-
 }
 
 async function seedPromptTemplates() {
@@ -162,7 +164,9 @@ async function seedGeneratedSourceBooksAndPages() {
     .limit(1);
 
   if (!sourceCharacter) {
-    throw new Error(`Character "${sourceCharacterSlug}" not found during seeding`);
+    throw new Error(
+      `Character "${sourceCharacterSlug}" not found during seeding`,
+    );
   }
 
   for (const [bookIndex] of generatedBooks.entries()) {
@@ -221,7 +225,10 @@ async function seedGeneratedSourceBooksAndPages() {
           updatedAt: now,
         })
         .onConflictDoUpdate({
-          target: [generatedBookPages.generatedBookId, generatedBookPages.pageNumber],
+          target: [
+            generatedBookPages.generatedBookId,
+            generatedBookPages.pageNumber,
+          ],
           set: {
             textContent: page?.text ?? null,
             imagePath: `./books/${bookIndex}/${sourceCharacterSlug}/original/page-${pageIndex}.jpg`,

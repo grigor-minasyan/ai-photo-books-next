@@ -8,10 +8,10 @@ Comprehensive reference for defining relations and using the relational queries 
 
 Drizzle has two query APIs:
 
-| API | Use Case | N+1 Safe |
-|-----|----------|----------|
-| **SQL-like** (`db.select()...`) | Complex queries, joins, aggregations | Manual |
-| **Relational** (`db.query...`) | Nested data, simple CRUD | Yes |
+| API                             | Use Case                             | N+1 Safe |
+| ------------------------------- | ------------------------------------ | -------- |
+| **SQL-like** (`db.select()...`) | Complex queries, joins, aggregations | Manual   |
+| **Relational** (`db.query...`)  | Nested data, simple CRUD             | Yes      |
 
 Relations are **application-level** (not database constraints). They enable the relational queries API.
 
@@ -22,8 +22,8 @@ Relations are **application-level** (not database constraints). They enable the 
 ### Imports
 
 ```typescript
-import { relations } from 'drizzle-orm';
-import { pgTable, uuid, text, timestamp, integer } from 'drizzle-orm/pg-core';
+import { relations } from "drizzle-orm";
+import { pgTable, uuid, text, timestamp, integer } from "drizzle-orm/pg-core";
 ```
 
 ---
@@ -34,15 +34,17 @@ A user has many posts. A post belongs to one user.
 
 ```typescript
 // Tables
-export const users = pgTable('users', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  name: text('name').notNull(),
+export const users = pgTable("users", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
 });
 
-export const posts = pgTable('posts', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  title: text('title').notNull(),
-  authorId: uuid('author_id').notNull().references(() => users.id),
+export const posts = pgTable("posts", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  title: text("title").notNull(),
+  authorId: uuid("author_id")
+    .notNull()
+    .references(() => users.id),
 });
 
 // Relations
@@ -82,16 +84,19 @@ A user has one profile. A profile belongs to one user.
 
 ```typescript
 // Tables
-export const users = pgTable('users', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  email: text('email').notNull(),
+export const users = pgTable("users", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  email: text("email").notNull(),
 });
 
-export const profiles = pgTable('profiles', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  userId: uuid('user_id').notNull().unique().references(() => users.id),
-  bio: text('bio'),
-  avatarUrl: text('avatar_url'),
+export const profiles = pgTable("profiles", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id")
+    .notNull()
+    .unique()
+    .references(() => users.id),
+  bio: text("bio"),
+  avatarUrl: text("avatar_url"),
 });
 
 // Relations
@@ -131,25 +136,31 @@ Users belong to many groups. Groups have many users.
 
 ```typescript
 // Tables
-export const users = pgTable('users', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  name: text('name').notNull(),
+export const users = pgTable("users", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
 });
 
-export const groups = pgTable('groups', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  name: text('name').notNull(),
+export const groups = pgTable("groups", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
 });
 
 // Junction table
-export const usersToGroups = pgTable('users_to_groups', {
-  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-  groupId: uuid('group_id').notNull().references(() => groups.id, { onDelete: 'cascade' }),
-  joinedAt: timestamp('joined_at').notNull().defaultNow(),
-  role: text('role').notNull().default('member'),
-}, (table) => [
-  primaryKey({ columns: [table.userId, table.groupId] }),
-]);
+export const usersToGroups = pgTable(
+  "users_to_groups",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    groupId: uuid("group_id")
+      .notNull()
+      .references(() => groups.id, { onDelete: "cascade" }),
+    joinedAt: timestamp("joined_at").notNull().defaultNow(),
+    role: text("role").notNull().default("member"),
+  },
+  (table) => [primaryKey({ columns: [table.userId, table.groupId] })],
+);
 
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
@@ -186,7 +197,7 @@ const userWithGroups = await db.query.users.findFirst({
 });
 
 // Flatten the result
-const groups = userWithGroups?.usersToGroups.map(utg => ({
+const groups = userWithGroups?.usersToGroups.map((utg) => ({
   ...utg.group,
   joinedAt: utg.joinedAt,
   role: utg.role,
@@ -210,22 +221,22 @@ const groupWithMembers = await db.query.groups.findFirst({
 A category can have a parent category and child categories.
 
 ```typescript
-import { AnyPgColumn } from 'drizzle-orm/pg-core';
+import { AnyPgColumn } from "drizzle-orm/pg-core";
 
-export const categories = pgTable('categories', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  name: text('name').notNull(),
-  parentId: uuid('parent_id').references((): AnyPgColumn => categories.id),
+export const categories = pgTable("categories", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
+  parentId: uuid("parent_id").references((): AnyPgColumn => categories.id),
 });
 
 export const categoriesRelations = relations(categories, ({ one, many }) => ({
   parent: one(categories, {
     fields: [categories.parentId],
     references: [categories.id],
-    relationName: 'parent',
+    relationName: "parent",
   }),
   children: many(categories, {
-    relationName: 'parent',
+    relationName: "parent",
   }),
 }));
 ```
@@ -248,7 +259,7 @@ const rootCategories = await db.query.categories.findMany({
   with: {
     children: {
       with: {
-        children: true,  // 2 levels deep
+        children: true, // 2 levels deep
       },
     },
   },
@@ -262,12 +273,12 @@ const rootCategories = await db.query.categories.findMany({
 ### Setup
 
 ```typescript
-import { drizzle } from 'drizzle-orm/postgres-js';
-import postgres from 'postgres';
-import * as schema from './schema';
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
+import * as schema from "./schema";
 
 const client = postgres(process.env.DATABASE_URL!);
-export const db = drizzle(client, { schema });  // Pass schema!
+export const db = drizzle(client, { schema }); // Pass schema!
 ```
 
 ### findMany
@@ -278,7 +289,7 @@ const allUsers = await db.query.users.findMany();
 
 // With filter
 const activeUsers = await db.query.users.findMany({
-  where: eq(users.status, 'active'),
+  where: eq(users.status, "active"),
 });
 
 // With ordering
@@ -395,7 +406,7 @@ const usersWithPostCount = await db.query.users.findMany({
   extras: {
     postCount: sql<number>`(
       SELECT count(*) FROM posts WHERE posts.author_id = users.id
-    )`.as('post_count'),
+    )`.as("post_count"),
   },
 });
 ```
@@ -408,34 +419,46 @@ const usersWithPostCount = await db.query.users.findMany({
 
 ```typescript
 // Schema
-export const users = pgTable('users', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  name: text('name').notNull(),
-  email: text('email').notNull().unique(),
+export const users = pgTable("users", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
+  email: text("email").notNull().unique(),
 });
 
-export const posts = pgTable('posts', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  title: text('title').notNull(),
-  content: text('content').notNull(),
-  authorId: uuid('author_id').notNull().references(() => users.id),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
+export const posts = pgTable("posts", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  authorId: uuid("author_id")
+    .notNull()
+    .references(() => users.id),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
-export const comments = pgTable('comments', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  content: text('content').notNull(),
-  postId: uuid('post_id').notNull().references(() => posts.id),
-  authorId: uuid('author_id').notNull().references(() => users.id),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
+export const comments = pgTable("comments", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  content: text("content").notNull(),
+  postId: uuid("post_id")
+    .notNull()
+    .references(() => posts.id),
+  authorId: uuid("author_id")
+    .notNull()
+    .references(() => users.id),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
-export const likes = pgTable('likes', {
-  userId: uuid('user_id').notNull().references(() => users.id),
-  postId: uuid('post_id').notNull().references(() => posts.id),
-}, (table) => [
-  primaryKey({ columns: [table.userId, table.postId] }),
-]);
+export const likes = pgTable(
+  "likes",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id),
+    postId: uuid("post_id")
+      .notNull()
+      .references(() => posts.id),
+  },
+  (table) => [primaryKey({ columns: [table.userId, table.postId] })],
+);
 
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
@@ -532,10 +555,10 @@ const feed = await db.query.posts.findMany({
   extras: {
     commentCount: sql<number>`(
       SELECT count(*) FROM comments WHERE comments.post_id = posts.id
-    )`.as('comment_count'),
+    )`.as("comment_count"),
     likeCount: sql<number>`(
       SELECT count(*) FROM likes WHERE likes.post_id = posts.id
-    )`.as('like_count'),
+    )`.as("like_count"),
   },
 });
 ```
@@ -547,7 +570,7 @@ const feed = await db.query.posts.findMany({
 ### Basic Types
 
 ```typescript
-import type { InferSelectModel, InferInsertModel } from 'drizzle-orm';
+import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
 
 type User = InferSelectModel<typeof users>;
 type NewUser = InferInsertModel<typeof users>;
@@ -557,9 +580,13 @@ type NewUser = InferInsertModel<typeof users>;
 
 ```typescript
 // Type from a specific query result
-type UserWithPosts = Awaited<ReturnType<typeof db.query.users.findFirst<{
-  with: { posts: true };
-}>>>;
+type UserWithPosts = Awaited<
+  ReturnType<
+    typeof db.query.users.findFirst<{
+      with: { posts: true };
+    }>
+  >
+>;
 
 // Or infer from actual query
 const getUser = async (id: string) => {
@@ -582,7 +609,7 @@ const result = await db
   })
   .from(users);
 
-type UserBasic = typeof result[number];
+type UserBasic = (typeof result)[number];
 // { id: string; email: string }
 ```
 

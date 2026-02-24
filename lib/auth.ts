@@ -28,13 +28,20 @@ export const auth = betterAuth({
           "email-verification": "Verify your email address",
           "forget-password": "Your password reset code",
         };
+        const recipientEmail =
+          serverEnv.NODE_ENV === "development" ? "delivered@resend.dev" : email;
 
-        void resend.emails.send({
-          from: serverEnv.RESEND_FROM_EMAIL,
-          to: email,
-          subject: subjectByType[type] ?? "Your verification code",
-          text: `Your verification code is: ${otp}`,
-        });
+        console.log("Sending email to", recipientEmail, otp);
+        void resend.emails
+          .send({
+            from: serverEnv.RESEND_FROM_EMAIL,
+            to: recipientEmail,
+            subject: subjectByType[type] ?? "Your verification code",
+            text: `Your verification code is: ${otp}`,
+          })
+          .catch((error) => {
+            console.error(error);
+          });
       },
     }),
     admin({
