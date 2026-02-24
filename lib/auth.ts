@@ -31,7 +31,7 @@ export const auth = betterAuth({
           throw new Error("RESEND_FROM_EMAIL is required to send OTP emails");
         }
 
-        const subjectByType: Record<string, string> = {
+        const subjectByType: Record<typeof type, string> = {
           "sign-in": "Your sign-in code",
           "email-verification": "Verify your email address",
           "forget-password": "Your password reset code",
