@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -28,12 +28,21 @@ import { authClient } from "@/lib/auth-client";
 
 export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
   const router = useRouter();
-  const [email, setEmail] = useState("");
+  const searchParams = useSearchParams();
+  const emailFromQuery = String(searchParams.get("email") ?? "").trim();
+  const shouldStartInOtpMode =
+    searchParams.get("verify") === "1" && emailFromQuery.length > 0;
+  const [email, setEmail] = useState(emailFromQuery);
   const [otp, setOtp] = useState("");
-  const [needsOtpVerification, setNeedsOtpVerification] = useState(false);
+  const [needsOtpVerification, setNeedsOtpVerification] =
+    useState(shouldStartInOtpMode);
   const [isPending, setIsPending] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(
+    shouldStartInOtpMode
+      ? "Your account exists but is not verified yet. Enter your OTP or resend the code."
+      : null,
+  );
 
   async function onSignUp(formData: FormData) {
     const name = String(formData.get("name") ?? "").trim();

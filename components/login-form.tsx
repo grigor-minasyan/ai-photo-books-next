@@ -46,6 +46,21 @@ export function LoginForm({
     setIsPending(false);
 
     if (error) {
+      const normalizedErrorMessage = (error.message ?? "").toLowerCase();
+      const isUnverifiedEmailError =
+        normalizedErrorMessage.includes("not verified") ||
+        (normalizedErrorMessage.includes("verify") &&
+          normalizedErrorMessage.includes("email"));
+
+      if (isUnverifiedEmailError) {
+        const params = new URLSearchParams({
+          verify: "1",
+          email,
+        });
+        router.push(`/sign-up?${params.toString()}`);
+        return;
+      }
+
       setErrorMessage(error.message ?? "Failed to sign in.");
       return;
     }
