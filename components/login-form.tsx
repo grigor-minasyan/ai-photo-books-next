@@ -40,7 +40,6 @@ export function LoginForm({
     const { error } = await authClient.signIn.email({
       email,
       password,
-      callbackURL: "/",
     });
 
     setIsPending(false);
@@ -53,11 +52,8 @@ export function LoginForm({
           normalizedErrorMessage.includes("email"));
 
       if (isUnverifiedEmailError) {
-        const params = new URLSearchParams({
-          verify: "1",
-          email,
-        });
-        router.push(`/sign-up?${params.toString()}`);
+        window.sessionStorage.setItem("pendingVerificationEmail", email);
+        router.push("/verify-email");
         return;
       }
 

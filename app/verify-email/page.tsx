@@ -3,33 +3,26 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-import { LoginForm } from "@/components/login-form";
+import { EmailVerificationForm } from "@/components/email-verification-form";
 import { authClient } from "@/lib/auth-client";
 
-export default function SignInPage() {
+export default function VerifyEmailPage() {
   const router = useRouter();
   const { data: session, isPending } = authClient.useSession();
-  const isVerifiedUser = Boolean(session?.user.emailVerified);
 
   useEffect(() => {
-    if (!isPending && isVerifiedUser) {
+    if (!isPending && session?.user.emailVerified) {
       router.replace("/account");
-      return;
     }
-    if (!isPending && session && !isVerifiedUser) {
-      router.replace("/verify-email");
-    }
-  }, [isPending, isVerifiedUser, router, session]);
+  }, [isPending, router, session]);
 
-  if (isPending || session) {
+  if (isPending || session?.user.emailVerified) {
     return null;
   }
 
   return (
     <div className="mx-auto flex min-h-[calc(100vh-16rem)] w-full max-w-6xl items-center justify-center px-4 py-10 sm:px-6">
-      <div className="w-full max-w-sm">
-        <LoginForm />
-      </div>
+      <EmailVerificationForm className="w-full max-w-sm" />
     </div>
   );
 }

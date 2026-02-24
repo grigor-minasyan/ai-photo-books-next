@@ -9,14 +9,23 @@ import { authClient } from "@/lib/auth-client";
 export default function SignUpPage() {
   const router = useRouter();
   const { data: session, isPending } = authClient.useSession();
+  const isVerifiedUser = Boolean(session?.user.emailVerified);
 
   useEffect(() => {
-    if (!isPending && session) {
+    if (!isPending && isVerifiedUser) {
       router.replace("/account");
+      return;
     }
-  }, [isPending, router, session]);
+    if (!isPending && session && !isVerifiedUser) {
+      router.replace("/verify-email");
+    }
+  }, [isPending, isVerifiedUser, router, session]);
 
-  if (isPending || session) {
+  if (isPending) {
+    return null;
+  }
+
+  if (isVerifiedUser || session) {
     return null;
   }
 

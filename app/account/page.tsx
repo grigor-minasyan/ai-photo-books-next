@@ -19,9 +19,13 @@ export default function AccountPage() {
     return null;
   }
 
+  console.log(session);
+
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
-      <h1 className="text-3xl font-semibold tracking-tight">{session.user.name}</h1>
+      <h1 className="text-3xl font-semibold tracking-tight">
+        {session.user.name}
+      </h1>
     </div>
   );
 }
