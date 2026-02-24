@@ -8,6 +8,13 @@
       "when": 1771834755369,
       "tag": "0000_colorful_iron_monger",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1771917314073,
+      "tag": "0001_curvy_hercules",
+      "breakpoints": true
     }
   ]
 }

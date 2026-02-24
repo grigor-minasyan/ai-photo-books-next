@@ -7,6 +7,9 @@
     "build": "bun run --bun next build",
     "start": "bun run --bun next start",
     "lint": "eslint",
+    "auth:generate": "better-auth generate --config ./lib/auth.ts --output ./lib/db/auth-schema.ts -y",
+    "auth:mcp": "better-auth mcp --cursor",
+    "auth:sync": "bun run auth:generate && bun run db:generate && bun run db:migrate",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
@@ -16,6 +19,7 @@
   "dependencies": {
     "@google/genai": "^1.42.0",
     "@neondatabase/serverless": "^1.0.2",
+    "better-auth": "^1.4.19",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "drizzle-orm": "^0.45.1",
@@ -27,11 +31,13 @@
     "radix-ui": "^1.4.3",
     "react": "19.2.3",
     "react-dom": "19.2.3",
+    "resend": "^6.9.2",
     "skia-canvas": "^3.0.8",
     "tailwind-merge": "^3.5.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@better-auth/cli": "^1.4.19",
     "@tailwindcss/postcss": "^4",
     "@types/bun": "^1.3.9",
     "@types/node": "^20",

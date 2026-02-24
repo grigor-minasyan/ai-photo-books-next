@@ -45,6 +45,46 @@ Optional:
 bun run db:studio
 ```
 
+## Authentication (Better Auth + Drizzle)
+
+This project now includes Better Auth with:
+
+- Email/password auth
+- Email OTP verification required during signup flow
+- Role support (`user` and `admin`)
+
+### Environment variables
+
+Copy `.env.example` to `.env` and set:
+
+- `BETTER_AUTH_SECRET` (32+ chars)
+- `BETTER_AUTH_URL` (for local: `http://localhost:3000`)
+- `RESEND_API_KEY`
+- `RESEND_FROM_EMAIL`
+
+### Auth setup commands
+
+```bash
+# Generate Better Auth Drizzle schema
+bun run auth:generate
+
+# One-time Cursor MCP setup for Better Auth docs/tools
+bun run auth:mcp
+
+# Sync auth + drizzle migrations
+bun run auth:sync
+```
+
+### Manual admin assignment (for your account)
+
+New users default to role `user`. To manually make your account admin:
+
+```sql
+UPDATE "user"
+SET "role" = 'admin'
+WHERE "email" = 'your-email@example.com';
+```
+
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
 ## Learn More
