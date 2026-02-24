@@ -76,13 +76,20 @@ export function LoginForm({
                   id="email"
                   name="email"
                   type="email"
+                  autoComplete="email"
                   placeholder="m@example.com"
                   required
                 />
               </Field>
               <Field>
                 <FieldLabel htmlFor="password">Password</FieldLabel>
-                <Input id="password" name="password" type="password" required />
+                <Input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                />
               </Field>
               {errorMessage ? <p className="text-sm text-destructive">{errorMessage}</p> : null}
               <Field>
