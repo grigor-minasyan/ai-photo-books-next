@@ -5,10 +5,9 @@ import { Resend } from "resend";
 
 import { db } from "@/lib/db/client";
 import * as schema from "@/lib/db/schema";
+import { serverEnv } from "@/lib/server-env";
 
-const resend = process.env.RESEND_API_KEY
-  ? new Resend(process.env.RESEND_API_KEY)
-  : null;
+const resend = new Resend(serverEnv.RESEND_API_KEY);
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -24,13 +23,6 @@ export const auth = betterAuth({
       sendVerificationOnSignUp: true,
       overrideDefaultEmailVerification: true,
       async sendVerificationOTP({ email, otp, type }) {
-        if (!resend) {
-          throw new Error("RESEND_API_KEY is required to send OTP emails");
-        }
-        if (!process.env.RESEND_FROM_EMAIL) {
-          throw new Error("RESEND_FROM_EMAIL is required to send OTP emails");
-        }
-
         const subjectByType: Record<typeof type, string> = {
           "sign-in": "Your sign-in code",
           "email-verification": "Verify your email address",
@@ -38,7 +30,7 @@ export const auth = betterAuth({
         };
 
         void resend.emails.send({
-          from: process.env.RESEND_FROM_EMAIL,
+          from: serverEnv.RESEND_FROM_EMAIL,
           to: email,
           subject: subjectByType[type] ?? "Your verification code",
           text: `Your verification code is: ${otp}`,

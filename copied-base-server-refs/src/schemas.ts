@@ -1,5 +1,7 @@
 import z from "zod";
 
+import { serverEnv } from "@/lib/server-env";
+
 export const BOOK_PAGE_COUNT = 30;
 
 export const bookSchema = z.strictObject({
@@ -19,9 +21,7 @@ export const bookSchema = z.strictObject({
 
 export type Book = z.infer<typeof bookSchema>;
 
-export const env = z
-  .object({
-    GEMINI_API_KEY: z.string().min(1),
-    REDIS_URL: z.string().min(1),
-  })
-  .parse(process.env);
+export const env = {
+  GEMINI_API_KEY: serverEnv.GEMINI_API_KEY,
+  REDIS_URL: serverEnv.REDIS_URL,
+};
