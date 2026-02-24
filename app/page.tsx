@@ -31,7 +31,7 @@ export default async function Home() {
               href="/sign-up"
               className="inline-flex h-10 items-center rounded-md border px-5 text-sm font-medium hover:bg-accent"
             >
-              Create account
+              Start personalizing
             </Link>
           </div>
         </div>

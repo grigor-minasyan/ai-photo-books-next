@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 import { authClient } from "@/lib/auth-client";
 
@@ -12,11 +12,17 @@ const navItems = [
 
 export function SiteHeader() {
   const router = useRouter();
+  const pathname = usePathname();
   const { data: session } = authClient.useSession();
 
   async function onSignOut() {
     await authClient.signOut();
-    router.push("/");
+
+    if (pathname === "/account") {
+      router.replace("/");
+      return;
+    }
+
     router.refresh();
   }
 

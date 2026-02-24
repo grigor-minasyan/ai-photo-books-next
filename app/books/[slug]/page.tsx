@@ -81,7 +81,7 @@ export default async function BookProductPage({
               href="/sign-up"
               className="inline-flex h-10 items-center rounded-md bg-primary px-5 text-sm font-medium text-primary-foreground hover:opacity-90"
             >
-              Sign up to personalize
+              Start personalizing
             </Link>
             <Link
               href="/"
