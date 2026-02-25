@@ -1,5 +1,7 @@
 import Image from "next/image";
-import Link from "next/link";
+import { getTranslations } from "next-intl/server";
+
+import { Link } from "@/i18n/navigation";
 
 type BookProductCardProps = {
   slug: string;
@@ -7,11 +9,13 @@ type BookProductCardProps = {
   coverImagePath: string;
 };
 
-export function BookProductCard({
+export async function BookProductCard({
   slug,
   title,
   coverImagePath,
 }: BookProductCardProps) {
+  const t = await getTranslations("BookCard");
+
   return (
     <article className="overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm">
       <Link href={`/books/${slug}`} className="block">
@@ -31,7 +35,7 @@ export function BookProductCard({
           href={`/books/${slug}`}
           className="inline-flex items-center text-sm font-medium text-primary hover:underline"
         >
-          View book
+          {t("viewBook")}
         </Link>
       </div>
     </article>

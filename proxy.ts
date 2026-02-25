@@ -1,16 +1,27 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import createMiddleware from "next-intl/middleware";
 import { NextResponse } from "next/server";
 
-const isAdminRoute = createRouteMatcher(["/admin(.*)"]);
+import { routing } from "@/i18n/routing";
+
+const handleI18nRouting = createMiddleware(routing);
+const isAdminRoute = createRouteMatcher(["/:locale/admin(.*)"]);
 
 export default clerkMiddleware(async (auth, req) => {
   if (isAdminRoute(req)) {
     const { userId, sessionClaims } = await auth();
 
     if (!userId || sessionClaims?.metadata?.role !== "admin") {
-      return NextResponse.redirect(new URL("/", req.url));
+      const firstSegment = req.nextUrl.pathname.split("/")[1];
+      const locale = routing.locales.includes(firstSegment as "en" | "hy")
+        ? firstSegment
+        : routing.defaultLocale;
+
+      return NextResponse.redirect(new URL(`/${locale}`, req.url));
     }
   }
+
+  return handleI18nRouting(req);
 });
 
 export const config = {

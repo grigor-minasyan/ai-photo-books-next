@@ -1,20 +1,28 @@
 import Image from "next/image";
-import Link from "next/link";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 
+import { Link } from "@/i18n/navigation";
+import { type AppLocale } from "@/i18n/routing";
 import { getBookProductBySlug } from "@/lib/db/queries/book-products";
 
 type BookProductPageProps = {
   params: Promise<{
+    locale: string;
     slug: string;
   }>;
 };
 
-export default async function BookProductPage({
-  params,
-}: BookProductPageProps) {
-  const { slug } = await params;
-  const product = await getBookProductBySlug(slug);
+export default async function BookProductPage({ params }: BookProductPageProps) {
+  const { locale, slug } = await params;
+  setRequestLocale(locale);
+
+  const t = await getTranslations("BookDetail");
+  const product = await getBookProductBySlug(
+    slug,
+    locale as AppLocale,
+    t("defaultDescription"),
+  );
 
   if (!product) {
     notFound();
@@ -35,14 +43,10 @@ export default async function BookProductPage({
         <div className="space-y-6">
           <div className="space-y-2">
             <p className="text-xs font-medium uppercase tracking-wide text-primary">
-              Source Book
+              {t("sourceBook")}
             </p>
-            <h1 className="text-3xl font-bold tracking-tight">
-              {product.title}
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              {product.description}
-            </p>
+            <h1 className="text-3xl font-bold tracking-tight">{product.title}</h1>
+            <p className="text-sm text-muted-foreground">{product.description}</p>
           </div>
 
           <div className="flex flex-wrap gap-3">
@@ -50,13 +54,13 @@ export default async function BookProductPage({
               href="/sign-up"
               className="inline-flex h-10 items-center rounded-md bg-primary px-5 text-sm font-medium text-primary-foreground hover:opacity-90"
             >
-              Start personalizing
+              {t("startPersonalizing")}
             </Link>
             <Link
               href="/"
               className="inline-flex h-10 items-center rounded-md border px-5 text-sm font-medium hover:bg-accent"
             >
-              Back to books
+              {t("backToBooks")}
             </Link>
           </div>
         </div>

@@ -9,22 +9,25 @@ import {
   useUser,
 } from "@clerk/nextjs";
 import { Shield } from "lucide-react";
-import Link from "next/link";
+import { useLocale, useTranslations } from "next-intl";
 
-const navItems = [
-  { href: "/#books", label: "Books" },
-  { href: "/#how-it-works", label: "How It Works" },
-];
+import { Link } from "@/i18n/navigation";
 
 export function SiteHeader() {
+  const t = useTranslations("Header");
+  const locale = useLocale();
   const { user, isLoaded } = useUser();
   const isAdmin = isLoaded && user?.publicMetadata?.role === "admin";
+  const navItems = [
+    { href: "/#books", label: t("books") },
+    { href: "/#how-it-works", label: t("howItWorks") },
+  ];
 
   return (
     <header className="border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/80">
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-4 sm:px-6">
         <Link href="/" className="text-lg font-semibold tracking-tight">
-          AI Photo Books
+          {t("brandName")}
         </Link>
         <nav className="hidden items-center gap-6 text-sm md:flex">
           {navItems.map((item) => (
@@ -44,7 +47,7 @@ export function SiteHeader() {
                 type="button"
                 className="inline-flex h-9 items-center rounded-md border px-3 text-sm font-medium hover:bg-accent"
               >
-                Sign in
+                {t("signIn")}
               </button>
             </SignInButton>
             <SignUpButton mode="modal">
@@ -52,7 +55,7 @@ export function SiteHeader() {
                 type="button"
                 className="inline-flex h-9 items-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground hover:opacity-90"
               >
-                Sign up
+                {t("signUp")}
               </button>
             </SignUpButton>
           </SignedOut>
@@ -61,9 +64,9 @@ export function SiteHeader() {
               {isAdmin ? (
                 <UserButton.MenuItems>
                   <UserButton.Link
-                    label="Admin dashboard"
+                    label={t("adminDashboard")}
                     labelIcon={<Shield className="size-4" />}
-                    href="/admin"
+                    href={`/${locale}/admin`}
                   />
                 </UserButton.MenuItems>
               ) : null}

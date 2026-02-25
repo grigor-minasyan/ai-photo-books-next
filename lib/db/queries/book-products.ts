@@ -12,7 +12,7 @@ import {
 } from "@/lib/db/schema";
 
 const IMAGE_PLACEHOLDER_PATH = "/file.svg";
-const DEFAULT_PRODUCT_LOCALE = "en" as const;
+export type ProductLocale = "en" | "hy";
 
 function normalizeProductImagePath(imagePath: string | null): string {
   if (!imagePath) {
@@ -38,9 +38,9 @@ export type HomepageBookProduct = {
   rawCoverImagePath: string | null;
 };
 
-export async function listHomepageBookProducts(): Promise<
-  HomepageBookProduct[]
-> {
+export async function listHomepageBookProducts(
+  locale: ProductLocale,
+): Promise<HomepageBookProduct[]> {
   const rows = await db
     .select({
       id: bookProducts.id,
@@ -54,7 +54,7 @@ export async function listHomepageBookProducts(): Promise<
       bookProductLocalizations,
       and(
         eq(bookProductLocalizations.bookProductId, bookProducts.id),
-        eq(bookProductLocalizations.locale, DEFAULT_PRODUCT_LOCALE),
+        eq(bookProductLocalizations.locale, locale),
       ),
     )
     .leftJoin(
@@ -108,6 +108,8 @@ export type BookProductDetails = {
 
 export async function getBookProductBySlug(
   slug: string,
+  locale: ProductLocale,
+  fallbackDescription: string,
 ): Promise<BookProductDetails | null> {
   const [productRow] = await db
     .select({
@@ -127,7 +129,7 @@ export async function getBookProductBySlug(
       bookProductLocalizations,
       and(
         eq(bookProductLocalizations.bookProductId, bookProducts.id),
-        eq(bookProductLocalizations.locale, DEFAULT_PRODUCT_LOCALE),
+        eq(bookProductLocalizations.locale, locale),
       ),
     )
     .leftJoin(
@@ -142,9 +144,7 @@ export async function getBookProductBySlug(
   }
 
   const title = productRow.localizedTitle ?? productRow.titleTemplate;
-  const description =
-    productRow.localizedDescription ??
-    "This source book is used as the base template before personalization.";
+  const description = productRow.localizedDescription ?? fallbackDescription;
 
   const templatePages = await db
     .select({
