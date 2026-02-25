@@ -5,10 +5,10 @@ const serverEnvSchema = z.object({
     .enum(["development", "test", "production"])
     .default("development"),
   DATABASE_URL: z.string().min(1),
-  RESEND_API_KEY: z.string().min(1),
-  RESEND_FROM_EMAIL: z.string().email(),
   GEMINI_API_KEY: z.string().min(1),
   REDIS_URL: z.string().min(1),
+  NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1),
+  CLERK_SECRET_KEY: z.string().min(1),
 });
 
 export const serverEnv = serverEnvSchema.parse(process.env);

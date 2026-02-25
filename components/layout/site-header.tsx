@@ -1,5 +1,12 @@
 "use client";
 
+import {
+  SignInButton,
+  SignUpButton,
+  SignedIn,
+  SignedOut,
+  UserButton,
+} from "@clerk/nextjs";
 import Link from "next/link";
 
 const navItems = [
@@ -25,6 +32,29 @@ export function SiteHeader() {
             </Link>
           ))}
         </nav>
+        <div className="flex items-center gap-2">
+          <SignedOut>
+            <SignInButton mode="modal">
+              <button
+                type="button"
+                className="inline-flex h-9 items-center rounded-md border px-3 text-sm font-medium hover:bg-accent"
+              >
+                Sign in
+              </button>
+            </SignInButton>
+            <SignUpButton mode="modal">
+              <button
+                type="button"
+                className="inline-flex h-9 items-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground hover:opacity-90"
+              >
+                Sign up
+              </button>
+            </SignUpButton>
+          </SignedOut>
+          <SignedIn>
+            <UserButton />
+          </SignedIn>
+        </div>
       </div>
     </header>
   );
