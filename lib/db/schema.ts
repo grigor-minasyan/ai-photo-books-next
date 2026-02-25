@@ -269,5 +269,3 @@ export const generatedBookPagesRelations = relations(
     }),
   }),
 );
-
-export * from "./auth-schema";

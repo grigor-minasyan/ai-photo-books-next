@@ -15,6 +15,13 @@
       "when": 1771917314073,
       "tag": "0001_curvy_hercules",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1771985491662,
+      "tag": "0002_kind_red_hulk",
+      "breakpoints": true
     }
   ]
 }

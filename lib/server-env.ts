@@ -9,7 +9,6 @@ const serverEnvSchema = z.object({
   RESEND_FROM_EMAIL: z.string().email(),
   GEMINI_API_KEY: z.string().min(1),
   REDIS_URL: z.string().min(1),
-  BETTER_AUTH_URL: z.string().min(1),
 });
 
 export const serverEnv = serverEnvSchema.parse(process.env);

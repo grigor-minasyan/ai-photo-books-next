@@ -1,9 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-
-import { authClient } from "@/lib/auth-client";
 
 const navItems = [
   { href: "/#books", label: "Books" },
@@ -11,28 +8,12 @@ const navItems = [
 ];
 
 export function SiteHeader() {
-  const router = useRouter();
-  const pathname = usePathname();
-  const { data: session } = authClient.useSession();
-
-  async function onSignOut() {
-    await authClient.signOut();
-
-    if (pathname === "/account") {
-      router.replace("/");
-      return;
-    }
-
-    router.refresh();
-  }
-
   return (
     <header className="border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/80">
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-4 sm:px-6">
         <Link href="/" className="text-lg font-semibold tracking-tight">
           AI Photo Books
         </Link>
-
         <nav className="hidden items-center gap-6 text-sm md:flex">
           {navItems.map((item) => (
             <Link
@@ -44,39 +25,6 @@ export function SiteHeader() {
             </Link>
           ))}
         </nav>
-
-        {session ? (
-          <div className="flex items-center gap-2">
-            <Link
-              href="/account"
-              className="inline-flex h-9 items-center rounded-md px-4 text-sm font-medium text-foreground hover:bg-accent"
-            >
-              Account
-            </Link>
-            <button
-              type="button"
-              onClick={onSignOut}
-              className="inline-flex h-9 items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:opacity-90"
-            >
-              Sign Out
-            </button>
-          </div>
-        ) : (
-          <div className="flex items-center gap-2">
-            <Link
-              href="/sign-in"
-              className="inline-flex h-9 items-center rounded-md px-4 text-sm font-medium text-foreground hover:bg-accent"
-            >
-              Sign In
-            </Link>
-            <Link
-              href="/sign-up"
-              className="inline-flex h-9 items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:opacity-90"
-            >
-              Sign Up
-            </Link>
-          </div>
-        )}
       </div>
     </header>
   );
