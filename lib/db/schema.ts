@@ -216,10 +216,13 @@ export const bookProductsRelations = relations(
   bookProducts,
   ({ many, one }) => ({
     pages: many(bookProductPages),
-    generatedBooks: many(generatedBooks),
+    generatedBooks: many(generatedBooks, {
+      relationName: "bookProductGeneratedBooks",
+    }),
     sourceGeneratedBook: one(generatedBooks, {
       fields: [bookProducts.sourceGeneratedBookId],
       references: [generatedBooks.id],
+      relationName: "bookProductSourceGeneratedBook",
     }),
   }),
 );
@@ -244,13 +247,16 @@ export const generatedBooksRelations = relations(
     bookProduct: one(bookProducts, {
       fields: [generatedBooks.bookProductId],
       references: [bookProducts.id],
+      relationName: "bookProductGeneratedBooks",
     }),
     character: one(characters, {
       fields: [generatedBooks.characterId],
       references: [characters.id],
     }),
     pages: many(generatedBookPages),
-    sourcedByProducts: many(bookProducts),
+    sourcedByProducts: many(bookProducts, {
+      relationName: "bookProductSourceGeneratedBook",
+    }),
   }),
 );
 
