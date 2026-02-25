@@ -188,9 +188,7 @@ export const generatedBookPages = pgTable(
         onUpdate: "cascade",
       }),
     pageNumber: integer("page_number").notNull(),
-    textContent: text("text_content"),
     imagePath: text("image_path").notNull(),
-    imageDescription: text("image_description"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),

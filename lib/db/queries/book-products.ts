@@ -125,11 +125,18 @@ export async function getBookProductBySlug(
         .select({
           id: generatedBookPages.id,
           pageNumber: generatedBookPages.pageNumber,
-          textContent: generatedBookPages.textContent,
+          textContent: bookProductPages.textTemplate,
           imagePath: generatedBookPages.imagePath,
-          imageDescription: generatedBookPages.imageDescription,
+          imageDescription: bookProductPages.imageDescription,
         })
         .from(generatedBookPages)
+        .leftJoin(
+          bookProductPages,
+          and(
+            eq(bookProductPages.bookProductId, productRow.id),
+            eq(bookProductPages.pageNumber, generatedBookPages.pageNumber),
+          ),
+        )
         .where(
           eq(
             generatedBookPages.generatedBookId,

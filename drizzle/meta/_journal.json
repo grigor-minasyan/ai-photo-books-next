@@ -22,6 +22,13 @@
       "when": 1771985491662,
       "tag": "0002_kind_red_hulk",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1771989853247,
+      "tag": "0003_bent_wolfsbane",
+      "breakpoints": true
     }
   ]
 }

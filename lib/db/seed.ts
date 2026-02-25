@@ -218,9 +218,7 @@ async function seedGeneratedSourceBooksAndPages() {
         .values({
           generatedBookId: sourceGeneratedBook.id,
           pageNumber,
-          textContent: page?.text ?? null,
           imagePath: `./books/${bookIndex}/${sourceCharacterSlug}/original/page-${pageIndex}.jpg`,
-          imageDescription: page?.imageDescription ?? null,
           createdAt: now,
           updatedAt: now,
         })
@@ -230,9 +228,7 @@ async function seedGeneratedSourceBooksAndPages() {
             generatedBookPages.pageNumber,
           ],
           set: {
-            textContent: page?.text ?? null,
             imagePath: `./books/${bookIndex}/${sourceCharacterSlug}/original/page-${pageIndex}.jpg`,
-            imageDescription: page?.imageDescription ?? null,
             updatedAt: now,
           },
         });
