@@ -45,36 +45,6 @@ export default async function BookProductPage({
             </p>
           </div>
 
-          <div className="space-y-4 rounded-xl border p-5">
-            <div>
-              <p className="text-sm font-medium">Cover prompt</p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {product.coverImageDescription}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm font-medium">Ending text template</p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {product.endingTextTemplate}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm font-medium">Back cover prompt</p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {product.backCoverImageDescription}
-              </p>
-            </div>
-          </div>
-
-          <div className="rounded-xl border p-5">
-            <p className="text-sm font-medium">Story template details</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {product.templatePages.length} template pages and{" "}
-              {product.sourcePages.length} source generated pages are available
-              for this book.
-            </p>
-          </div>
-
           <div className="flex flex-wrap gap-3">
             <Link
               href="/sign-up"
