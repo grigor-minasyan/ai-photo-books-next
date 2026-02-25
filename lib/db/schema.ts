@@ -30,6 +30,11 @@ export const bookLifecycleStatusEnum = pgEnum("book_lifecycle_status", [
   "archived",
 ]);
 
+export const bookVariationKeyEnum = pgEnum("book_variation_key", [
+  "hardcover",
+  "softcover",
+]);
+
 export const bookProducts = pgTable(
   "book_products",
   {
@@ -61,6 +66,77 @@ export const bookProducts = pgTable(
       table.sourceGeneratedBookId,
     ),
     index("book_products_active_idx").on(table.isActive),
+  ],
+);
+
+export const bookVariations = pgTable(
+  "book_variations",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    key: bookVariationKeyEnum("key").notNull(),
+    label: text("label").notNull(),
+    pageCount: integer("page_count").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex("book_variations_key_uidx").on(table.key),
+    check("book_variations_page_count_positive", sql`${table.pageCount} > 0`),
+  ],
+);
+
+export const bookProductVariationPricing = pgTable(
+  "book_product_variation_pricing",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    bookProductId: uuid("book_product_id")
+      .notNull()
+      .references(() => bookProducts.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    bookVariationId: uuid("book_variation_id")
+      .notNull()
+      .references(() => bookVariations.id, {
+        onDelete: "restrict",
+        onUpdate: "cascade",
+      }),
+    originalPriceCents: integer("original_price_cents").notNull(),
+    reducedPriceCents: integer("reduced_price_cents").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .notNull(),
+  },
+  (table) => [
+    unique("book_product_variation_pricing_product_variation_unique").on(
+      table.bookProductId,
+      table.bookVariationId,
+    ),
+    index("book_product_variation_pricing_product_idx").on(table.bookProductId),
+    index("book_product_variation_pricing_variation_idx").on(
+      table.bookVariationId,
+    ),
+    check(
+      "book_product_variation_pricing_original_min",
+      sql`${table.originalPriceCents} >= 1000`,
+    ),
+    check(
+      "book_product_variation_pricing_reduced_min",
+      sql`${table.reducedPriceCents} >= 1000`,
+    ),
+    check(
+      "book_product_variation_pricing_reduced_lte_original",
+      sql`${table.reducedPriceCents} <= ${table.originalPriceCents}`,
+    ),
   ],
 );
 
@@ -214,6 +290,7 @@ export const bookProductsRelations = relations(
   bookProducts,
   ({ many, one }) => ({
     pages: many(bookProductPages),
+    variationPricing: many(bookProductVariationPricing),
     generatedBooks: many(generatedBooks, {
       relationName: "bookProductGeneratedBooks",
     }),
@@ -221,6 +298,24 @@ export const bookProductsRelations = relations(
       fields: [bookProducts.sourceGeneratedBookId],
       references: [generatedBooks.id],
       relationName: "bookProductSourceGeneratedBook",
+    }),
+  }),
+);
+
+export const bookVariationsRelations = relations(bookVariations, ({ many }) => ({
+  productPricing: many(bookProductVariationPricing),
+}));
+
+export const bookProductVariationPricingRelations = relations(
+  bookProductVariationPricing,
+  ({ one }) => ({
+    bookProduct: one(bookProducts, {
+      fields: [bookProductVariationPricing.bookProductId],
+      references: [bookProducts.id],
+    }),
+    bookVariation: one(bookVariations, {
+      fields: [bookProductVariationPricing.bookVariationId],
+      references: [bookVariations.id],
     }),
   }),
 );

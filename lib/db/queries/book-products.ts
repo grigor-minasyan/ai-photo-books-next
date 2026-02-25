@@ -2,8 +2,10 @@ import { and, asc, eq } from "drizzle-orm";
 
 import { db } from "@/lib/db/client";
 import {
+  bookProductVariationPricing,
   bookProductPages,
   bookProducts,
+  bookVariations,
   generatedBookPages,
   generatedBooks,
 } from "@/lib/db/schema";
@@ -81,6 +83,13 @@ export type BookProductDetails = {
     imagePath: string;
     imageDescription: string | null;
   }>;
+  variationPricing: Array<{
+    variationKey: "hardcover" | "softcover";
+    variationLabel: string;
+    pageCount: number;
+    originalPriceCents: number;
+    reducedPriceCents: number;
+  }>;
 };
 
 export async function getBookProductBySlug(
@@ -146,10 +155,35 @@ export async function getBookProductBySlug(
         .orderBy(asc(generatedBookPages.pageNumber))
     : [];
 
+  const variationPricingRows = await db
+    .select({
+      variationKey: bookVariations.key,
+      variationLabel: bookVariations.label,
+      pageCount: bookVariations.pageCount,
+      originalPriceCents: bookProductVariationPricing.originalPriceCents,
+      reducedPriceCents: bookProductVariationPricing.reducedPriceCents,
+    })
+    .from(bookProductVariationPricing)
+    .innerJoin(
+      bookVariations,
+      eq(bookVariations.id, bookProductVariationPricing.bookVariationId),
+    )
+    .where(eq(bookProductVariationPricing.bookProductId, productRow.id));
+
+  const variationSortOrder: Record<"hardcover" | "softcover", number> = {
+    hardcover: 0,
+    softcover: 1,
+  };
+
+  const variationPricing = variationPricingRows.sort(
+    (a, b) => variationSortOrder[a.variationKey] - variationSortOrder[b.variationKey],
+  );
+
   return {
     ...productRow,
     coverImagePath: normalizeProductImagePath(productRow.rawCoverImagePath),
     templatePages,
     sourcePages,
+    variationPricing,
   };
 }

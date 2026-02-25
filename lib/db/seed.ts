@@ -6,8 +6,10 @@ import {
 } from "../../copied-base-server-refs/src/constants";
 import { db } from "./client";
 import {
+  bookProductVariationPricing,
   bookProductPages,
   bookProducts,
+  bookVariations,
   characters,
   generatedBookPages,
   generatedBooks as generatedBooksTable,
@@ -25,6 +27,22 @@ const SOURCE_GENERATED_BOOK_IDS = [
   "11111111-1111-1111-1111-111111111102",
   "11111111-1111-1111-1111-111111111103",
 ] as const;
+
+const BOOK_VARIATION_SEEDS = [
+  {
+    key: "hardcover" as const,
+    label: "Hardcover",
+    pageCount: 30,
+  },
+  {
+    key: "softcover" as const,
+    label: "Softcover",
+    pageCount: 30,
+  },
+] as const;
+
+const DEFAULT_ORIGINAL_PRICE_CENTS = 4499;
+const DEFAULT_REDUCED_PRICE_CENTS = 3499;
 
 const PROMPT_SEEDS = [
   {
@@ -122,6 +140,68 @@ async function seedPromptTemplates() {
           updatedAt: now,
         },
       });
+  }
+}
+
+async function seedBookVariations() {
+  const now = new Date();
+
+  for (const variation of BOOK_VARIATION_SEEDS) {
+    await db
+      .insert(bookVariations)
+      .values({
+        key: variation.key,
+        label: variation.label,
+        pageCount: variation.pageCount,
+        createdAt: now,
+        updatedAt: now,
+      })
+      .onConflictDoUpdate({
+        target: bookVariations.key,
+        set: {
+          label: variation.label,
+          pageCount: variation.pageCount,
+          updatedAt: now,
+        },
+      });
+  }
+}
+
+async function seedBookVariationPricing() {
+  const now = new Date();
+  const products = await db.select({ id: bookProducts.id }).from(bookProducts);
+
+  const variations = await db
+    .select({
+      id: bookVariations.id,
+      key: bookVariations.key,
+    })
+    .from(bookVariations);
+
+  for (const product of products) {
+    for (const variation of variations) {
+      await db
+        .insert(bookProductVariationPricing)
+        .values({
+          bookProductId: product.id,
+          bookVariationId: variation.id,
+          originalPriceCents: DEFAULT_ORIGINAL_PRICE_CENTS,
+          reducedPriceCents: DEFAULT_REDUCED_PRICE_CENTS,
+          createdAt: now,
+          updatedAt: now,
+        })
+        .onConflictDoUpdate({
+          target: [
+            bookProductVariationPricing.bookProductId,
+            bookProductVariationPricing.bookVariationId,
+          ],
+          set: {
+            originalPriceCents: DEFAULT_ORIGINAL_PRICE_CENTS,
+            reducedPriceCents: DEFAULT_REDUCED_PRICE_CENTS,
+            updatedAt: now,
+          },
+        });
+    }
   }
 }
 
@@ -245,7 +325,9 @@ async function seedGeneratedSourceBooksAndPages() {
 }
 
 async function main() {
+  await seedBookVariations();
   await seedBookProductsAndPages();
+  await seedBookVariationPricing();
   await seedPromptTemplates();
   await seedCharacters();
   await seedGeneratedSourceBooksAndPages();
