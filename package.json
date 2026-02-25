@@ -14,6 +14,7 @@
     "db:seed": "bun run --bun lib/db/seed.ts"
   },
   "dependencies": {
+    "@clerk/localizations": "^3.37.0",
     "@clerk/nextjs": "^6.38.2",
     "@google/genai": "^1.42.0",
     "@neondatabase/serverless": "^1.0.2",
