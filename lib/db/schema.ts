@@ -35,6 +35,8 @@ export const bookVariationKeyEnum = pgEnum("book_variation_key", [
   "softcover",
 ]);
 
+export const productLocaleEnum = pgEnum("product_locale", ["en", "hy"]);
+
 export const bookProducts = pgTable(
   "book_products",
   {
@@ -66,6 +68,37 @@ export const bookProducts = pgTable(
       table.sourceGeneratedBookId,
     ),
     index("book_products_active_idx").on(table.isActive),
+  ],
+);
+
+export const bookProductLocalizations = pgTable(
+  "book_product_localizations",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    bookProductId: uuid("book_product_id")
+      .notNull()
+      .references(() => bookProducts.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    locale: productLocaleEnum("locale").notNull(),
+    title: text("title").notNull(),
+    description: text("description").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .notNull(),
+  },
+  (table) => [
+    unique("book_product_localizations_product_locale_unique").on(
+      table.bookProductId,
+      table.locale,
+    ),
+    index("book_product_localizations_product_idx").on(table.bookProductId),
+    index("book_product_localizations_locale_idx").on(table.locale),
   ],
 );
 
@@ -290,6 +323,7 @@ export const bookProductsRelations = relations(
   bookProducts,
   ({ many, one }) => ({
     pages: many(bookProductPages),
+    localizations: many(bookProductLocalizations),
     variationPricing: many(bookProductVariationPricing),
     generatedBooks: many(generatedBooks, {
       relationName: "bookProductGeneratedBooks",
@@ -298,6 +332,16 @@ export const bookProductsRelations = relations(
       fields: [bookProducts.sourceGeneratedBookId],
       references: [generatedBooks.id],
       relationName: "bookProductSourceGeneratedBook",
+    }),
+  }),
+);
+
+export const bookProductLocalizationsRelations = relations(
+  bookProductLocalizations,
+  ({ one }) => ({
+    bookProduct: one(bookProducts, {
+      fields: [bookProductLocalizations.bookProductId],
+      references: [bookProducts.id],
     }),
   }),
 );

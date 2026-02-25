@@ -2,6 +2,7 @@ import { and, asc, eq } from "drizzle-orm";
 
 import { db } from "@/lib/db/client";
 import {
+  bookProductLocalizations,
   bookProductVariationPricing,
   bookProductPages,
   bookProducts,
@@ -11,6 +12,7 @@ import {
 } from "@/lib/db/schema";
 
 const IMAGE_PLACEHOLDER_PATH = "/file.svg";
+const DEFAULT_PRODUCT_LOCALE = "en" as const;
 
 function normalizeProductImagePath(imagePath: string | null): string {
   if (!imagePath) {
@@ -31,7 +33,7 @@ function normalizeProductImagePath(imagePath: string | null): string {
 export type HomepageBookProduct = {
   id: string;
   slug: string;
-  titleTemplate: string;
+  title: string;
   coverImagePath: string;
   rawCoverImagePath: string | null;
 };
@@ -44,9 +46,17 @@ export async function listHomepageBookProducts(): Promise<
       id: bookProducts.id,
       slug: bookProducts.slug,
       titleTemplate: bookProducts.titleTemplate,
+      localizedTitle: bookProductLocalizations.title,
       rawCoverImagePath: generatedBooks.coverImagePath,
     })
     .from(bookProducts)
+    .leftJoin(
+      bookProductLocalizations,
+      and(
+        eq(bookProductLocalizations.bookProductId, bookProducts.id),
+        eq(bookProductLocalizations.locale, DEFAULT_PRODUCT_LOCALE),
+      ),
+    )
     .leftJoin(
       generatedBooks,
       eq(bookProducts.sourceGeneratedBookId, generatedBooks.id),
@@ -55,7 +65,10 @@ export async function listHomepageBookProducts(): Promise<
     .orderBy(asc(bookProducts.createdAt));
 
   return rows.map((row) => ({
-    ...row,
+    id: row.id,
+    slug: row.slug,
+    title: row.localizedTitle ?? row.titleTemplate,
+    rawCoverImagePath: row.rawCoverImagePath,
     coverImagePath: normalizeProductImagePath(row.rawCoverImagePath),
   }));
 }
@@ -63,7 +76,8 @@ export async function listHomepageBookProducts(): Promise<
 export type BookProductDetails = {
   id: string;
   slug: string;
-  titleTemplate: string;
+  title: string;
+  description: string;
   coverImageDescription: string;
   endingTextTemplate: string;
   backCoverImageDescription: string;
@@ -100,6 +114,8 @@ export async function getBookProductBySlug(
       id: bookProducts.id,
       slug: bookProducts.slug,
       titleTemplate: bookProducts.titleTemplate,
+      localizedTitle: bookProductLocalizations.title,
+      localizedDescription: bookProductLocalizations.description,
       coverImageDescription: bookProducts.coverImageDescription,
       endingTextTemplate: bookProducts.endingTextTemplate,
       backCoverImageDescription: bookProducts.backCoverImageDescription,
@@ -107,6 +123,13 @@ export async function getBookProductBySlug(
       rawCoverImagePath: generatedBooks.coverImagePath,
     })
     .from(bookProducts)
+    .leftJoin(
+      bookProductLocalizations,
+      and(
+        eq(bookProductLocalizations.bookProductId, bookProducts.id),
+        eq(bookProductLocalizations.locale, DEFAULT_PRODUCT_LOCALE),
+      ),
+    )
     .leftJoin(
       generatedBooks,
       eq(bookProducts.sourceGeneratedBookId, generatedBooks.id),
@@ -117,6 +140,11 @@ export async function getBookProductBySlug(
   if (!productRow) {
     return null;
   }
+
+  const title = productRow.localizedTitle ?? productRow.titleTemplate;
+  const description =
+    productRow.localizedDescription ??
+    "This source book is used as the base template before personalization.";
 
   const templatePages = await db
     .select({
@@ -180,7 +208,15 @@ export async function getBookProductBySlug(
   );
 
   return {
-    ...productRow,
+    id: productRow.id,
+    slug: productRow.slug,
+    title,
+    description,
+    coverImageDescription: productRow.coverImageDescription,
+    endingTextTemplate: productRow.endingTextTemplate,
+    backCoverImageDescription: productRow.backCoverImageDescription,
+    sourceGeneratedBookId: productRow.sourceGeneratedBookId,
+    rawCoverImagePath: productRow.rawCoverImagePath,
     coverImagePath: normalizeProductImagePath(productRow.rawCoverImagePath),
     templatePages,
     sourcePages,

@@ -60,7 +60,7 @@ export default async function Home() {
               <BookProductCard
                 key={product.id}
                 slug={product.slug}
-                title={product.titleTemplate}
+                title={product.title}
                 coverImagePath={product.coverImagePath}
               />
             ))}

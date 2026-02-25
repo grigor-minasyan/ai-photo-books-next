@@ -26,7 +26,7 @@ export default async function BookProductPage({
         <div className="relative aspect-4/5 overflow-hidden rounded-xl border bg-muted">
           <Image
             src={product.coverImagePath}
-            alt={product.titleTemplate}
+            alt={product.title}
             fill
             className="object-cover"
           />
@@ -38,11 +38,10 @@ export default async function BookProductPage({
               Source Book
             </p>
             <h1 className="text-3xl font-bold tracking-tight">
-              {product.titleTemplate}
+              {product.title}
             </h1>
             <p className="text-sm text-muted-foreground">
-              This source book is used as the base template before
-              personalization.
+              {product.description}
             </p>
           </div>
 

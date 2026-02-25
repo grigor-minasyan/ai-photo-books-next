@@ -6,6 +6,7 @@ import {
 } from "../../copied-base-server-refs/src/constants";
 import { db } from "./client";
 import {
+  bookProductLocalizations,
   bookProductVariationPricing,
   bookProductPages,
   bookProducts,
@@ -43,6 +44,48 @@ const BOOK_VARIATION_SEEDS = [
 
 const DEFAULT_ORIGINAL_PRICE_CENTS = 4499;
 const DEFAULT_REDUCED_PRICE_CENTS = 3499;
+
+const PRODUCT_LOCALIZATION_SEEDS = {
+  "adventures-in-armenia": {
+    en: {
+      title: "Adventures Across Armenia",
+      description:
+        "Join your child on a colorful journey across Armenia, from Yerevan's lively squares to the peaceful shores of Lake Sevan and the ancient monasteries carved into mountains. Each page celebrates discovery, culture, and wonder as familiar landmarks, local traditions, and breathtaking landscapes come to life through the eyes of a young explorer.",
+    },
+    hy: {
+      title: "Արկածներ Հայաստանում",
+      description:
+        "Միացեք ձեր փոքրիկին Հայաստանի գունեղ ճամփորդության մեջ՝ Երևանի աշխույժ հրապարակներից մինչև Սևանի խաղաղ ափեր ու լեռների մեջ փորված հնագույն վանքեր։ Ամեն էջը լի է բացահայտումներով, մշակութային գեղեցկությամբ և հրաշալի տեսարաններով, որտեղ երեխան իր աչքերով ճանաչում է հայրենիքի պատմությունը, բնությունն ու ջերմությունը։",
+    },
+  },
+  "magic-paintbrush": {
+    en: {
+      title: "The Magical Paintbrush",
+      description:
+        "When a child discovers a mysterious glowing paintbrush, every drawing starts to come alive in the most delightful ways. Flowers bloom in the air, friendly animals appear, and imagination transforms an ordinary room into a world of playful magic, teaching that creativity can turn even the simplest dream into something real.",
+    },
+    hy: {
+      title: "Կախարդական վրձինը",
+      description:
+        "Երբ երեխան գտնում է խորհրդավոր, փայլող վրձին, նրա յուրաքանչյուր նկար կենդանանում է ամենահմայիչ ձևերով։ Օդում ծաղիկներ են բացվում, բարի կենդանիներ են հայտնվում, և երևակայությունը սովորական սենյակը վերածում է կախարդական աշխարհի՝ ցույց տալով, որ ստեղծագործ միտքը կարող է իրականացնել նույնիսկ ամենափոքր երազանքը։",
+    },
+  },
+  "city-of-toys": {
+    en: {
+      title: "The City of Toys",
+      description:
+        "As night falls, a child's bedroom opens into a fantastical city where toys become friends, streets glow with color, and every corner holds a joyful surprise. From toy trains and teddy-bear mayors to dreamy sky rides, this bedtime adventure blends excitement and comfort into a magical story about friendship, play, and sweet dreams.",
+    },
+    hy: {
+      title: "Խաղալիքների քաղաքը",
+      description:
+        "Երբ գիշերը իջնում է, երեխայի սենյակը բացվում է դեպի կախարդական քաղաք, որտեղ խաղալիքները դառնում են ընկերներ, փողոցները փայլում են գույներով, իսկ ամեն անկյունում սպասում է ուրախ անակնկալ։ Գնացքներից ու բարի արջուկ-քաղաքապետից մինչև երկնային արկածներ՝ այս քնաբեր հեքիաթը միավորում է խաղը, ընկերությունը և քաղցր երազների ջերմ մթնոլորտը։",
+    },
+  },
+} as const satisfies Record<
+  (typeof PRODUCT_SLUGS)[number],
+  Record<"en" | "hy", { title: string; description: string }>
+>;
 
 const PROMPT_SEEDS = [
   {
@@ -112,6 +155,49 @@ async function seedBookProductsAndPages() {
           set: {
             textTemplate: page.text,
             imageDescription: page.imageDescription,
+            updatedAt: now,
+          },
+        });
+    }
+  }
+}
+
+async function seedBookProductLocalizations() {
+  const now = new Date();
+  const products = await db
+    .select({
+      id: bookProducts.id,
+      slug: bookProducts.slug,
+    })
+    .from(bookProducts);
+
+  for (const product of products) {
+    const localizations = PRODUCT_LOCALIZATION_SEEDS[product.slug as keyof typeof PRODUCT_LOCALIZATION_SEEDS];
+    if (!localizations) {
+      continue;
+    }
+
+    for (const locale of ["en", "hy"] as const) {
+      const localizedContent = localizations[locale];
+
+      await db
+        .insert(bookProductLocalizations)
+        .values({
+          bookProductId: product.id,
+          locale,
+          title: localizedContent.title,
+          description: localizedContent.description,
+          createdAt: now,
+          updatedAt: now,
+        })
+        .onConflictDoUpdate({
+          target: [
+            bookProductLocalizations.bookProductId,
+            bookProductLocalizations.locale,
+          ],
+          set: {
+            title: localizedContent.title,
+            description: localizedContent.description,
             updatedAt: now,
           },
         });
@@ -327,6 +413,7 @@ async function seedGeneratedSourceBooksAndPages() {
 async function main() {
   await seedBookVariations();
   await seedBookProductsAndPages();
+  await seedBookProductLocalizations();
   await seedBookVariationPricing();
   await seedPromptTemplates();
   await seedCharacters();
