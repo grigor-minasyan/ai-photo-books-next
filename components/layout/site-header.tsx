@@ -8,25 +8,13 @@ import {
   UserButton,
   useUser,
 } from "@clerk/nextjs";
+import { Shield } from "lucide-react";
 import Link from "next/link";
 
 const navItems = [
   { href: "/#books", label: "Books" },
   { href: "/#how-it-works", label: "How It Works" },
 ];
-
-function ShieldIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-      className="size-4"
-      fill="currentColor"
-    >
-      <path d="M12 2 4 5v6c0 5.25 3.4 10.17 8 11.8 4.6-1.63 8-6.55 8-11.8V5l-8-3Zm0 2.18 6 2.25V11c0 4.26-2.63 8.36-6 9.85-3.37-1.49-6-5.59-6-9.85V6.43l6-2.25Z" />
-    </svg>
-  );
-}
 
 export function SiteHeader() {
   const { user, isLoaded } = useUser();
@@ -74,7 +62,7 @@ export function SiteHeader() {
                 <UserButton.MenuItems>
                   <UserButton.Link
                     label="Admin dashboard"
-                    labelIcon={<ShieldIcon />}
+                    labelIcon={<Shield className="size-4" />}
                     href="/admin"
                   />
                 </UserButton.MenuItems>
