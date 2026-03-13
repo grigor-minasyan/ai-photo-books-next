@@ -56,7 +56,6 @@ const hy = {
     viewBook: "Դիտել գիրքը",
   },
   BookDetail: {
-    sourceBook: "Աղբյուր-գիրք",
     startPersonalizing: "Սկսել անհատականացումը",
     backToBooks: "Վերադառնալ գրքերին",
     defaultDescription:

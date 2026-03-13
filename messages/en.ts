@@ -54,7 +54,6 @@ const en = {
     viewBook: "View book",
   },
   BookDetail: {
-    sourceBook: "Source Book",
     startPersonalizing: "Start personalizing",
     backToBooks: "Back to books",
     defaultDescription:

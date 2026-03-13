@@ -13,7 +13,9 @@ type BookProductPageProps = {
   }>;
 };
 
-export default async function BookProductPage({ params }: BookProductPageProps) {
+export default async function BookProductPage({
+  params,
+}: BookProductPageProps) {
   const { locale, slug } = await params;
   setRequestLocale(locale);
 
@@ -42,11 +44,12 @@ export default async function BookProductPage({ params }: BookProductPageProps) 
 
         <div className="space-y-6">
           <div className="space-y-2">
-            <p className="text-xs font-medium uppercase tracking-wide text-primary">
-              {t("sourceBook")}
+            <h1 className="text-3xl font-bold tracking-tight">
+              {product.title}
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              {product.description}
             </p>
-            <h1 className="text-3xl font-bold tracking-tight">{product.title}</h1>
-            <p className="text-sm text-muted-foreground">{product.description}</p>
           </div>
 
           <div className="flex flex-wrap gap-3">
