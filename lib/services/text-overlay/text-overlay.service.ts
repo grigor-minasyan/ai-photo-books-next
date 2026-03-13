@@ -152,14 +152,6 @@ async function calculateComplementaryColor(
   return { textColor, strokeColor, borderColor };
 }
 
-function registerFont(options: TextOptions) {
-  if (options.fontPath) {
-    // skia-canvas exposes FontLibrary.use; this is not a React hook.
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    FontLibrary.use(options.fontFamily, options.fontPath);
-  }
-}
-
 /**
  * Adds stylized Armenian/Universal text to the bottom 15% of an image
  * with a glassmorphism blur effect and stroke.

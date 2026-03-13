@@ -19,6 +19,7 @@ import {
 } from "@/lib/services/storage/r2.service";
 import { assertAdmin } from "./_auth";
 import { declineArmenianName } from "../../../../lib/services/armenian/name-declension";
+import path from "path";
 
 const singlePageSchema = z.object({
   generatedBookId: z.string().regex(/^[0-9a-f-]{36}$/),
@@ -39,8 +40,11 @@ const assetSchema = z.object({
 
 function resolveTextOverlayOptions() {
   return {
-    fontFamily: process.env.TEXT_OVERLAY_FONT_FAMILY || "Arial",
-    fontPath: process.env.TEXT_OVERLAY_FONT_PATH,
+    fontPath: path.join(
+      process.cwd(),
+      "lib/fonts/NotoSansArmenian-VariableFont_wdth,wght.ttf",
+    ),
+    fontFamily: "Noto Sans Armenian",
   };
 }
 
