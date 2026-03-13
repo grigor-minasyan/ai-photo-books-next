@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 import {
   generateFinalBackCoverAction,
@@ -42,24 +43,62 @@ export function GeneratedBookDetailManager({
   data: GeneratedBookDetail;
   locale: string;
 }) {
+  const router = useRouter();
   const [selectedPages, setSelectedPages] = useState<number[]>([]);
-  const [isPending, startTransition] = useTransition();
+  const [pendingActions, setPendingActions] = useState<Set<string>>(new Set());
   const [message, setMessage] = useState<string | null>(null);
   const allPageNumbers = useMemo(
     () => data.pages.map((page) => page.pageNumber),
     [data.pages],
   );
 
-  const runAction = (fn: () => Promise<void>) => {
+  const isActionPending = (actionKey: string) => pendingActions.has(actionKey);
+
+  useEffect(() => {
+    if (pendingActions.size === 0) {
+      return;
+    }
+
+    // Keep the UI in sync as long-running generation jobs finish.
+    const refreshInterval = window.setInterval(() => {
+      router.refresh();
+    }, 1500);
+
+    return () => {
+      window.clearInterval(refreshInterval);
+    };
+  }, [pendingActions, router]);
+
+  const runAction = (
+    actionKey: string,
+    fn: () => Promise<void>,
+    successMessage = "Done",
+  ) => {
+    if (pendingActions.has(actionKey)) {
+      return;
+    }
     setMessage(null);
-    startTransition(async () => {
+    setPendingActions((prev) => {
+      const next = new Set(prev);
+      next.add(actionKey);
+      return next;
+    });
+
+    void (async () => {
       try {
         await fn();
-        setMessage("Done");
+        setMessage(successMessage);
       } catch (error) {
         setMessage(error instanceof Error ? error.message : "Action failed");
+      } finally {
+        router.refresh();
+        setPendingActions((prev) => {
+          const next = new Set(prev);
+          next.delete(actionKey);
+          return next;
+        });
       }
-    });
+    })();
   };
 
   return (
@@ -77,44 +116,62 @@ export function GeneratedBookDetailManager({
               rawPath={data.book.rawCoverImagePath}
               finalPath={data.book.coverImagePath}
               onGenerateRaw={() =>
-                runAction(() =>
-                  generateRawCoverAction({
-                    generatedBookId: data.book.id,
-                    locale,
-                  }),
+                runAction(
+                  "cover-raw-final",
+                  async () => {
+                    await generateRawCoverAction({
+                      generatedBookId: data.book.id,
+                      locale,
+                    });
+                    await generateFinalCoverAction({
+                      generatedBookId: data.book.id,
+                      locale,
+                    });
+                  },
+                  "Generated cover raw + final",
                 )
               }
               onGenerateFinal={() =>
-                runAction(() =>
+                runAction("cover-final", () =>
                   generateFinalCoverAction({
                     generatedBookId: data.book.id,
                     locale,
                   }),
                 )
               }
-              isPending={isPending}
+              rawPending={isActionPending("cover-raw-final")}
+              finalPending={isActionPending("cover-final")}
             />
             <AssetActions
               title="Back Cover"
               rawPath={data.book.rawBackCoverImagePath}
               finalPath={data.book.backCoverImagePath}
               onGenerateRaw={() =>
-                runAction(() =>
-                  generateRawBackCoverAction({
-                    generatedBookId: data.book.id,
-                    locale,
-                  }),
+                runAction(
+                  "back-cover-raw-final",
+                  async () => {
+                    await generateRawBackCoverAction({
+                      generatedBookId: data.book.id,
+                      locale,
+                    });
+                    await generateFinalBackCoverAction({
+                      generatedBookId: data.book.id,
+                      locale,
+                    });
+                  },
+                  "Generated back cover raw + final",
                 )
               }
               onGenerateFinal={() =>
-                runAction(() =>
+                runAction("back-cover-final", () =>
                   generateFinalBackCoverAction({
                     generatedBookId: data.book.id,
                     locale,
                   }),
                 )
               }
-              isPending={isPending}
+              rawPending={isActionPending("back-cover-raw-final")}
+              finalPending={isActionPending("back-cover-final")}
             />
           </div>
           {message ? (
@@ -148,16 +205,29 @@ export function GeneratedBookDetailManager({
             <Button
               type="button"
               size="sm"
-              disabled={isPending || selectedPages.length === 0}
-              onClick={() =>
-                runAction(() =>
-                  generateRawPagesBulkAction({
-                    generatedBookId: data.book.id,
-                    pageNumbers: selectedPages,
-                    locale,
-                  }),
-                )
+              disabled={
+                selectedPages.length === 0 ||
+                isActionPending("pages-bulk-raw-final")
               }
+              onClick={() => {
+                const pageNumbers = [...selectedPages];
+                runAction(
+                  "pages-bulk-raw-final",
+                  async () => {
+                    await generateRawPagesBulkAction({
+                      generatedBookId: data.book.id,
+                      pageNumbers,
+                      locale,
+                    });
+                    await generateFinalPagesBulkAction({
+                      generatedBookId: data.book.id,
+                      pageNumbers,
+                      locale,
+                    });
+                  },
+                  "Generated selected pages raw + final",
+                );
+              }}
             >
               Generate raw for selected
             </Button>
@@ -165,16 +235,20 @@ export function GeneratedBookDetailManager({
               type="button"
               size="sm"
               variant="secondary"
-              disabled={isPending || selectedPages.length === 0}
-              onClick={() =>
-                runAction(() =>
+              disabled={
+                selectedPages.length === 0 ||
+                isActionPending("pages-bulk-final")
+              }
+              onClick={() => {
+                const pageNumbers = [...selectedPages];
+                runAction("pages-bulk-final", () =>
                   generateFinalPagesBulkAction({
                     generatedBookId: data.book.id,
-                    pageNumbers: selectedPages,
+                    pageNumbers,
                     locale,
                   }),
-                )
-              }
+                );
+              }}
             >
               Generate final for selected
             </Button>
@@ -222,14 +296,23 @@ export function GeneratedBookDetailManager({
                     type="button"
                     size="sm"
                     variant="outline"
-                    disabled={isPending}
+                    disabled={isActionPending(`page-${page.id}-raw-final`)}
                     onClick={() =>
-                      runAction(() =>
-                        generateRawPageAction({
-                          generatedBookId: data.book.id,
-                          pageNumber: page.pageNumber,
-                          locale,
-                        }),
+                      runAction(
+                        `page-${page.id}-raw-final`,
+                        async () => {
+                          await generateRawPageAction({
+                            generatedBookId: data.book.id,
+                            pageNumber: page.pageNumber,
+                            locale,
+                          });
+                          await generateFinalPageAction({
+                            generatedBookId: data.book.id,
+                            pageNumber: page.pageNumber,
+                            locale,
+                          });
+                        },
+                        `Generated page ${page.pageNumber} raw + final`,
                       )
                     }
                   >
@@ -238,9 +321,9 @@ export function GeneratedBookDetailManager({
                   <Button
                     type="button"
                     size="sm"
-                    disabled={isPending}
+                    disabled={isActionPending(`page-${page.id}-final`)}
                     onClick={() =>
-                      runAction(() =>
+                      runAction(`page-${page.id}-final`, () =>
                         generateFinalPageAction({
                           generatedBookId: data.book.id,
                           pageNumber: page.pageNumber,
@@ -267,14 +350,16 @@ function AssetActions({
   finalPath,
   onGenerateRaw,
   onGenerateFinal,
-  isPending,
+  rawPending,
+  finalPending,
 }: {
   title: string;
   rawPath: string | null;
   finalPath: string | null;
   onGenerateRaw: () => void;
   onGenerateFinal: () => void;
-  isPending: boolean;
+  rawPending: boolean;
+  finalPending: boolean;
 }) {
   return (
     <div className="rounded-md border p-3">
@@ -291,7 +376,7 @@ function AssetActions({
           type="button"
           size="sm"
           variant="outline"
-          disabled={isPending}
+          disabled={rawPending}
           onClick={onGenerateRaw}
         >
           Generate raw
@@ -299,7 +384,7 @@ function AssetActions({
         <Button
           type="button"
           size="sm"
-          disabled={isPending}
+          disabled={finalPending}
           onClick={onGenerateFinal}
         >
           Generate final
@@ -318,7 +403,6 @@ function PreviewImage({
   alt: string;
   label: string;
 }) {
-  console.log("grigor", src, toImageUrl(src, { fallbackPath: "/file.svg" }));
   return (
     <div className="space-y-1">
       <p className="text-[10px] text-muted-foreground">{label}</p>
@@ -326,13 +410,13 @@ function PreviewImage({
         <Image
           src={toImageUrl(src, { fallbackPath: "/file.svg" })}
           alt={alt}
-          width={64}
-          height={64}
+          width={112}
+          height={112}
           unoptimized
-          className="h-16 w-16 rounded border object-cover"
+          className="h-28 w-28 rounded border object-cover"
         />
       ) : (
-        <div className="bg-muted text-muted-foreground flex h-16 w-16 items-center justify-center rounded border text-[10px]">
+        <div className="bg-muted text-muted-foreground flex h-28 w-28 items-center justify-center rounded border text-[10px]">
           no image
         </div>
       )}

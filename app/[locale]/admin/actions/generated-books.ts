@@ -4,9 +4,7 @@ import { asc, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
-import {
-  getVariationPageCount,
-} from "@/lib/db/queries/admin/book-products";
+import { getVariationPageCount } from "@/lib/db/queries/admin/book-products";
 import {
   getGeneratedBookAdminDetail,
   listAdminGeneratedBooks,
@@ -20,11 +18,12 @@ import {
   generatedBooks,
 } from "@/lib/db/schema";
 import { assertAdmin } from "./_auth";
+import { fakeUuidSchema } from "../../../../lib/utils";
 
 const createGeneratedBookSchema = z.object({
-  bookProductId: z.string().uuid(),
-  characterId: z.string().uuid(),
-  variationId: z.string().uuid(),
+  bookProductId: fakeUuidSchema,
+  characterId: fakeUuidSchema,
+  variationId: fakeUuidSchema,
   status: z
     .enum(["draft", "processing", "ready", "failed", "archived"])
     .default("draft"),
@@ -32,7 +31,7 @@ const createGeneratedBookSchema = z.object({
 });
 
 const updateGeneratedBookStatusSchema = z.object({
-  generatedBookId: z.string().uuid(),
+  generatedBookId: fakeUuidSchema,
   status: z.enum(["draft", "processing", "ready", "failed", "archived"]),
   locale: z.string().min(2),
 });
@@ -51,11 +50,19 @@ export async function getAdminGeneratedBookFormOptionsAction() {
   await assertAdmin();
   const [products, allCharacters, variations] = await Promise.all([
     db
-      .select({ id: bookProducts.id, slug: bookProducts.slug, title: bookProducts.titleTemplate })
+      .select({
+        id: bookProducts.id,
+        slug: bookProducts.slug,
+        title: bookProducts.titleTemplate,
+      })
       .from(bookProducts)
       .orderBy(asc(bookProducts.slug)),
     db
-      .select({ id: characters.id, name: characters.name, slug: characters.slug })
+      .select({
+        id: characters.id,
+        name: characters.name,
+        slug: characters.slug,
+      })
       .from(characters)
       .orderBy(asc(characters.slug)),
     db
@@ -129,6 +136,8 @@ export async function updateGeneratedBookStatusAction(input: unknown) {
   }
 
   revalidatePath(`/${parsed.locale}/admin/generated-books`);
-  revalidatePath(`/${parsed.locale}/admin/generated-books/${parsed.generatedBookId}`);
+  revalidatePath(
+    `/${parsed.locale}/admin/generated-books/${parsed.generatedBookId}`,
+  );
   return updated;
 }

@@ -16,6 +16,7 @@ import {
   bookProducts,
 } from "@/lib/db/schema";
 import { assertAdmin } from "./_auth";
+import { fakeUuidSchema } from "../../../../lib/utils";
 
 const baseBookProductSchema = z.object({
   slug: z.string().min(1),
@@ -34,7 +35,7 @@ const localizationSchema = z.object({
 });
 
 const variationPricingSchema = z.object({
-  bookVariationId: z.string().uuid(),
+  bookVariationId: fakeUuidSchema,
   originalPriceCents: z.number().int().min(1000),
   reducedPriceCents: z.number().int().min(1000),
 });
@@ -45,11 +46,11 @@ const createBookProductSchema = baseBookProductSchema.extend({
 });
 
 const updateBookProductSchema = createBookProductSchema.extend({
-  bookProductId: z.string().uuid(),
+  bookProductId: fakeUuidSchema,
 });
 
 const upsertBookProductPageSchema = z.object({
-  bookProductId: z.string().uuid(),
+  bookProductId: fakeUuidSchema,
   pageNumber: z.number().int().min(1),
   textTemplate: z.string().min(1),
   imageDescription: z.string().nullable(),

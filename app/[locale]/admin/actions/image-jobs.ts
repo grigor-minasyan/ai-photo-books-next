@@ -20,21 +20,22 @@ import {
 import { assertAdmin } from "./_auth";
 import { declineArmenianName } from "../../../../lib/services/armenian/name-declension";
 import path from "path";
+import { fakeUuidSchema } from "../../../../lib/utils";
 
 const singlePageSchema = z.object({
-  generatedBookId: z.string().regex(/^[0-9a-f-]{36}$/),
+  generatedBookId: fakeUuidSchema,
   pageNumber: z.number().int().min(1),
   locale: z.string().min(2),
 });
 
 const pageBulkSchema = z.object({
-  generatedBookId: z.string().uuid(),
+  generatedBookId: fakeUuidSchema,
   pageNumbers: z.array(z.number().int().min(1)).min(1),
   locale: z.string().min(2),
 });
 
 const assetSchema = z.object({
-  generatedBookId: z.string().uuid(),
+  generatedBookId: fakeUuidSchema,
   locale: z.string().min(2),
 });
 
@@ -340,23 +341,27 @@ export async function generateFinalPageAction(input: unknown) {
 export async function generateRawPagesBulkAction(input: unknown) {
   await assertAdmin();
   const parsed = pageBulkSchema.parse(input);
-  for (const pageNumber of parsed.pageNumbers) {
-    await generateRawPageAction({
-      generatedBookId: parsed.generatedBookId,
-      pageNumber,
-      locale: parsed.locale,
-    });
-  }
+  await Promise.all(
+    parsed.pageNumbers.map((pageNumber) =>
+      generateRawPageAction({
+        generatedBookId: parsed.generatedBookId,
+        pageNumber,
+        locale: parsed.locale,
+      }),
+    ),
+  );
 }
 
 export async function generateFinalPagesBulkAction(input: unknown) {
   await assertAdmin();
   const parsed = pageBulkSchema.parse(input);
-  for (const pageNumber of parsed.pageNumbers) {
-    await generateFinalPageAction({
-      generatedBookId: parsed.generatedBookId,
-      pageNumber,
-      locale: parsed.locale,
-    });
-  }
+  await Promise.all(
+    parsed.pageNumbers.map((pageNumber) =>
+      generateFinalPageAction({
+        generatedBookId: parsed.generatedBookId,
+        pageNumber,
+        locale: parsed.locale,
+      }),
+    ),
+  );
 }
