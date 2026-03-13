@@ -68,6 +68,7 @@ const en = {
     bookOverviewBadge: "Book overview",
     pageCountLabel: "Pages",
     formatsLabel: "Formats",
+    backCoverLabel: "Back cover",
     startingPriceLabel: "Starting at",
     unknownValue: "N/A",
     bookDetailsBadge: "Inside the book",

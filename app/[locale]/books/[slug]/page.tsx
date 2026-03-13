@@ -119,7 +119,9 @@ export default async function BookProductPage({
         <div className="space-y-8">
           <div className="space-y-3">
             <h3 className="text-lg font-semibold">{t("previewTab")}</h3>
-            {product.sourcePages.length === 0 && product.templatePages.length === 0 ? (
+            {product.sourcePages.length === 0 &&
+            product.templatePages.length === 0 &&
+            !product.rawBackCoverImagePath ? (
               <div className="rounded-xl border border-dashed p-6 text-sm text-muted-foreground">
                 {t("emptyPreview")}
               </div>
@@ -154,6 +156,25 @@ export default async function BookProductPage({
                         </CarouselItem>
                       ),
                     )}
+                    {product.rawBackCoverImagePath ? (
+                      <CarouselItem key="back-cover" className="md:basis-1/2 xl:basis-1/3">
+                        <article className="overflow-hidden rounded-xl border bg-background">
+                          <div className="relative aspect-square bg-muted">
+                            <Image
+                              src={product.backCoverImagePath}
+                              alt={`${product.title} ${t("backCoverLabel")}`}
+                              fill
+                              className="object-cover"
+                            />
+                          </div>
+                          <div className="p-4">
+                            <Badge variant="outline" className="rounded-full px-2.5 py-1">
+                              {t("backCoverLabel")}
+                            </Badge>
+                          </div>
+                        </article>
+                      </CarouselItem>
+                    ) : null}
                   </CarouselContent>
                   <CarouselPrevious className="left-3 top-3 translate-y-0" />
                   <CarouselNext className="right-3 top-3 translate-y-0" />

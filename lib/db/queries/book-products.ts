@@ -73,6 +73,8 @@ export type BookProductDetails = {
   sourceGeneratedBookId: string | null;
   coverImagePath: string;
   rawCoverImagePath: string | null;
+  backCoverImagePath: string;
+  rawBackCoverImagePath: string | null;
   templatePages: Array<{
     id: string;
     pageNumber: number;
@@ -112,6 +114,7 @@ export async function getBookProductBySlug(
       backCoverImageDescription: bookProducts.backCoverImageDescription,
       sourceGeneratedBookId: bookProducts.sourceGeneratedBookId,
       rawCoverImagePath: generatedBooks.coverImagePath,
+      rawBackCoverImagePath: generatedBooks.backCoverImagePath,
     })
     .from(bookProducts)
     .leftJoin(
@@ -193,7 +196,8 @@ export async function getBookProductBySlug(
   };
 
   const variationPricing = variationPricingRows.sort(
-    (a, b) => variationSortOrder[a.variationKey] - variationSortOrder[b.variationKey],
+    (a, b) =>
+      variationSortOrder[a.variationKey] - variationSortOrder[b.variationKey],
   );
 
   return {
@@ -207,6 +211,10 @@ export async function getBookProductBySlug(
     sourceGeneratedBookId: productRow.sourceGeneratedBookId,
     rawCoverImagePath: productRow.rawCoverImagePath,
     coverImagePath: normalizeProductImagePath(productRow.rawCoverImagePath),
+    rawBackCoverImagePath: productRow.rawBackCoverImagePath,
+    backCoverImagePath: normalizeProductImagePath(
+      productRow.rawBackCoverImagePath,
+    ),
     templatePages,
     sourcePages: sourcePages.map((page) => ({
       ...page,

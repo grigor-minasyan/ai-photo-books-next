@@ -70,6 +70,7 @@ const hy = {
     bookOverviewBadge: "Գրքի ամփոփում",
     pageCountLabel: "Էջեր",
     formatsLabel: "Ֆորմատներ",
+    backCoverLabel: "Հետևի կազմ",
     startingPriceLabel: "Սկսած",
     unknownValue: "Չկա",
     bookDetailsBadge: "Գրքի ներսը",
