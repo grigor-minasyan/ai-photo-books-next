@@ -17,6 +17,13 @@ import {
 import { toImageUrl } from "@/lib/utils/image-url";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 type GeneratedBookDetail = {
   book: {
@@ -110,7 +117,7 @@ export function GeneratedBookDetailManager({
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="grid gap-2 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2">
             <AssetActions
               title="Cover"
               rawPath={data.book.rawCoverImagePath}
@@ -254,86 +261,94 @@ export function GeneratedBookDetailManager({
             </Button>
           </div>
 
-          <div className="space-y-2">
+          <div className="grid gap-4 xl:grid-cols-2">
             {data.pages.map((page) => {
               const checked = selectedPages.includes(page.pageNumber);
               return (
                 <div
                   key={page.id}
-                  className="flex flex-wrap items-center gap-3 rounded-md border p-3"
+                  className="space-y-3 rounded-md border p-4"
                 >
-                  <input
-                    type="checkbox"
-                    checked={checked}
-                    onChange={(event) => {
-                      if (event.target.checked) {
-                        setSelectedPages((prev) => [...prev, page.pageNumber]);
-                        return;
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={(event) => {
+                          if (event.target.checked) {
+                            setSelectedPages((prev) => [...prev, page.pageNumber]);
+                            return;
+                          }
+                          setSelectedPages((prev) =>
+                            prev.filter((number) => number !== page.pageNumber),
+                          );
+                        }}
+                      />
+                      <span className="text-sm font-medium">Page {page.pageNumber}</span>
+                    </label>
+                    <p className="text-xs text-muted-foreground">
+                      raw: {page.rawImagePath ? "yes" : "no"} | final:{" "}
+                      {page.imagePath ? "yes" : "no"}
+                    </p>
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <PreviewImage
+                      src={page.rawImagePath}
+                      alt={`Page ${page.pageNumber} raw`}
+                      label="Raw"
+                    />
+                    <PreviewImage
+                      src={page.imagePath}
+                      alt={`Page ${page.pageNumber} final`}
+                      label="Final"
+                    />
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      disabled={isActionPending(`page-${page.id}-raw-final`)}
+                      onClick={() =>
+                        runAction(
+                          `page-${page.id}-raw-final`,
+                          async () => {
+                            await generateRawPageAction({
+                              generatedBookId: data.book.id,
+                              pageNumber: page.pageNumber,
+                              locale,
+                            });
+                            await generateFinalPageAction({
+                              generatedBookId: data.book.id,
+                              pageNumber: page.pageNumber,
+                              locale,
+                            });
+                          },
+                          `Generated page ${page.pageNumber} raw + final`,
+                        )
                       }
-                      setSelectedPages((prev) =>
-                        prev.filter((number) => number !== page.pageNumber),
-                      );
-                    }}
-                  />
-                  <p className="min-w-20 text-sm font-medium">
-                    Page {page.pageNumber}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    raw: {page.rawImagePath ? "yes" : "no"} | final:{" "}
-                    {page.imagePath ? "yes" : "no"}
-                  </p>
-                  <PreviewImage
-                    src={page.rawImagePath}
-                    alt={`Page ${page.pageNumber} raw`}
-                    label="Raw"
-                  />
-                  <PreviewImage
-                    src={page.imagePath}
-                    alt={`Page ${page.pageNumber} final`}
-                    label="Final"
-                  />
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    disabled={isActionPending(`page-${page.id}-raw-final`)}
-                    onClick={() =>
-                      runAction(
-                        `page-${page.id}-raw-final`,
-                        async () => {
-                          await generateRawPageAction({
+                    >
+                      Generate raw
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      disabled={isActionPending(`page-${page.id}-final`)}
+                      onClick={() =>
+                        runAction(`page-${page.id}-final`, () =>
+                          generateFinalPageAction({
                             generatedBookId: data.book.id,
                             pageNumber: page.pageNumber,
                             locale,
-                          });
-                          await generateFinalPageAction({
-                            generatedBookId: data.book.id,
-                            pageNumber: page.pageNumber,
-                            locale,
-                          });
-                        },
-                        `Generated page ${page.pageNumber} raw + final`,
-                      )
-                    }
-                  >
-                    Generate raw
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    disabled={isActionPending(`page-${page.id}-final`)}
-                    onClick={() =>
-                      runAction(`page-${page.id}-final`, () =>
-                        generateFinalPageAction({
-                          generatedBookId: data.book.id,
-                          pageNumber: page.pageNumber,
-                          locale,
-                        }),
-                      )
-                    }
-                  >
-                    Generate final
-                  </Button>
+                          }),
+                        )
+                      }
+                    >
+                      Generate final
+                    </Button>
+                  </div>
                 </div>
               );
             })}
@@ -362,12 +377,12 @@ function AssetActions({
   finalPending: boolean;
 }) {
   return (
-    <div className="rounded-md border p-3">
+    <div className="rounded-md border p-4">
       <p className="font-medium">{title}</p>
       <p className="text-xs text-muted-foreground">
         raw: {rawPath ? "yes" : "no"} | final: {finalPath ? "yes" : "no"}
       </p>
-      <div className="mt-2 flex gap-2">
+      <div className="mt-3 grid gap-3 sm:grid-cols-2">
         <PreviewImage src={rawPath} alt={`${title} raw`} label="Raw" />
         <PreviewImage src={finalPath} alt={`${title} final`} label="Final" />
       </div>
@@ -403,20 +418,47 @@ function PreviewImage({
   alt: string;
   label: string;
 }) {
+  const imageUrl = toImageUrl(src, { fallbackPath: "/file.svg" });
+  const hasImage = imageUrl !== "/file.svg";
+
   return (
-    <div className="space-y-1">
-      <p className="text-[10px] text-muted-foreground">{label}</p>
-      {toImageUrl(src, { fallbackPath: "/file.svg" }) !== "/file.svg" ? (
-        <Image
-          src={toImageUrl(src, { fallbackPath: "/file.svg" })}
-          alt={alt}
-          width={112}
-          height={112}
-          unoptimized
-          className="h-28 w-28 rounded border object-cover"
-        />
+    <div className="space-y-1.5">
+      <p className="text-xs text-muted-foreground">{label}</p>
+      {hasImage ? (
+        <Dialog>
+          <DialogTrigger asChild>
+            <button
+              type="button"
+              className="hover:border-primary focus-visible:ring-ring w-full overflow-hidden rounded-md border transition-colors focus-visible:ring-2 focus-visible:outline-none"
+            >
+              <Image
+                src={imageUrl}
+                alt={alt}
+                width={640}
+                height={640}
+                unoptimized
+                className="bg-muted h-72 w-full object-contain"
+              />
+            </button>
+          </DialogTrigger>
+          <DialogContent className="max-w-[95vw] p-4 sm:p-6">
+            <DialogHeader>
+              <DialogTitle>{alt}</DialogTitle>
+            </DialogHeader>
+            <div className="flex justify-center">
+              <Image
+                src={imageUrl}
+                alt={alt}
+                width={1600}
+                height={1600}
+                unoptimized
+                className="max-h-[86vh] w-auto rounded-md object-contain"
+              />
+            </div>
+          </DialogContent>
+        </Dialog>
       ) : (
-        <div className="bg-muted text-muted-foreground flex h-28 w-28 items-center justify-center rounded border text-[10px]">
+        <div className="bg-muted text-muted-foreground flex h-72 w-full items-center justify-center rounded-md border text-xs">
           no image
         </div>
       )}
