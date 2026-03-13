@@ -269,7 +269,9 @@ export const generatedBooks = pgTable(
         onUpdate: "cascade",
       }),
     status: bookLifecycleStatusEnum("status").default("draft").notNull(),
+    rawCoverImagePath: text("raw_cover_image_path"),
     coverImagePath: text("cover_image_path"),
+    rawBackCoverImagePath: text("raw_back_cover_image_path"),
     backCoverImagePath: text("back_cover_image_path"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
@@ -297,7 +299,8 @@ export const generatedBookPages = pgTable(
         onUpdate: "cascade",
       }),
     pageNumber: integer("page_number").notNull(),
-    imagePath: text("image_path").notNull(),
+    rawImagePath: text("raw_image_path"),
+    imagePath: text("image_path"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),

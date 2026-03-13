@@ -1,4 +1,4 @@
-import { declineArmenianName } from "../src/utils";
+import { declineArmenianName } from "./name-declension";
 
 import { describe, expect, test } from "bun:test";
 

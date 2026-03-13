@@ -10,24 +10,13 @@ import {
   generatedBookPages,
   generatedBooks,
 } from "@/lib/db/schema";
+import { toImageUrl } from "@/lib/utils/image-url";
 
 const IMAGE_PLACEHOLDER_PATH = "/file.svg";
 export type ProductLocale = "en" | "hy";
 
 function normalizeProductImagePath(imagePath: string | null): string {
-  if (!imagePath) {
-    return IMAGE_PLACEHOLDER_PATH;
-  }
-
-  if (imagePath.startsWith("http://") || imagePath.startsWith("https://")) {
-    return imagePath;
-  }
-
-  if (imagePath.startsWith("/")) {
-    return imagePath;
-  }
-
-  return IMAGE_PLACEHOLDER_PATH;
+  return toImageUrl(imagePath, { fallbackPath: IMAGE_PLACEHOLDER_PATH });
 }
 
 export type HomepageBookProduct = {

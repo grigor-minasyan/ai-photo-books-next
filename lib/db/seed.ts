@@ -359,7 +359,9 @@ async function seedGeneratedSourceBooksAndPages() {
         bookProductId: product.id,
         characterId: sourceCharacter.id,
         status: "ready",
+        rawCoverImagePath: `./books/${bookIndex}/${sourceCharacterSlug}/original/cover-front.jpg`,
         coverImagePath: `./books/${bookIndex}/${sourceCharacterSlug}/original/cover-front.jpg`,
+        rawBackCoverImagePath: `./books/${bookIndex}/${sourceCharacterSlug}/original/cover-back.jpg`,
         backCoverImagePath: `./books/${bookIndex}/${sourceCharacterSlug}/original/cover-back.jpg`,
         createdAt: now,
         updatedAt: now,
@@ -368,7 +370,9 @@ async function seedGeneratedSourceBooksAndPages() {
         target: generatedBooksTable.id,
         set: {
           status: "ready",
+          rawCoverImagePath: `./books/${bookIndex}/${sourceCharacterSlug}/original/cover-front.jpg`,
           coverImagePath: `./books/${bookIndex}/${sourceCharacterSlug}/original/cover-front.jpg`,
+          rawBackCoverImagePath: `./books/${bookIndex}/${sourceCharacterSlug}/original/cover-back.jpg`,
           backCoverImagePath: `./books/${bookIndex}/${sourceCharacterSlug}/original/cover-back.jpg`,
           updatedAt: now,
         },
@@ -377,13 +381,13 @@ async function seedGeneratedSourceBooksAndPages() {
 
     for (let pageNumber = 1; pageNumber <= 30; pageNumber += 1) {
       const pageIndex = pageNumber - 1;
-      const page = generatedBooks[bookIndex]?.pages[pageIndex];
 
       await db
         .insert(generatedBookPages)
         .values({
           generatedBookId: sourceGeneratedBook.id,
           pageNumber,
+          rawImagePath: `./books/${bookIndex}/${sourceCharacterSlug}/original/page-${pageIndex}.jpg`,
           imagePath: `./books/${bookIndex}/${sourceCharacterSlug}/original/page-${pageIndex}.jpg`,
           createdAt: now,
           updatedAt: now,
@@ -394,6 +398,7 @@ async function seedGeneratedSourceBooksAndPages() {
             generatedBookPages.pageNumber,
           ],
           set: {
+            rawImagePath: `./books/${bookIndex}/${sourceCharacterSlug}/original/page-${pageIndex}.jpg`,
             imagePath: `./books/${bookIndex}/${sourceCharacterSlug}/original/page-${pageIndex}.jpg`,
             updatedAt: now,
           },

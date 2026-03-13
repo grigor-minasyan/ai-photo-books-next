@@ -1,11 +1,163 @@
 import { Canvas, FontLibrary } from "skia-canvas";
 import sharp from "sharp";
 
-interface TextOptions {
-  fontPath: string;
+export type TextOptions = {
+  fontPath?: string;
   fontFamily: string;
   fontSize?: number;
   padding?: number;
+};
+
+/**
+ * Canvas text wrapping logic
+ */
+// Helper function to calculate wrapped lines
+function getWrappedLines(
+  ctx: ReturnType<typeof Canvas.prototype.getContext>,
+  text: string,
+  maxWidth: number,
+): string[] {
+  const words = text.split(" ");
+  const lines: string[] = [];
+  let currentLine = words[0] as string;
+
+  for (let i = 1; i < words.length; i++) {
+    const word = words[i] as string;
+    const width = ctx.measureText(currentLine + " " + word).width;
+    if (width < maxWidth) {
+      currentLine += " " + word;
+    } else {
+      lines.push(currentLine);
+      currentLine = word;
+    }
+  }
+  lines.push(currentLine);
+  return lines;
+}
+
+/**
+ * Split text into exactly 2 lines at the nearest word boundary to the middle
+ */
+function splitTextIntoTwoLines(text: string): string[] {
+  const words = text.split(" ");
+
+  // If only one word, return it as a single line
+  if (words.length <= 1) {
+    return [text];
+  }
+
+  // Find the middle character position
+  const midPoint = text.length / 2;
+
+  // Find the word boundary closest to the middle
+  let currentPos = 0;
+  let bestSplitIndex = 0;
+  let bestDistance = Infinity;
+
+  for (let i = 0; i < words.length - 1; i++) {
+    currentPos += (words[i]?.length || 0) + 1; // +1 for space
+    const distance = Math.abs(currentPos - midPoint);
+    if (distance < bestDistance) {
+      bestDistance = distance;
+      bestSplitIndex = i + 1;
+    }
+  }
+
+  // Split at the best position
+  const line1 = words.slice(0, bestSplitIndex).join(" ");
+  const line2 = words.slice(bestSplitIndex).join(" ");
+
+  return [line1, line2];
+}
+
+/**
+ * Calculate complementary color based on background for good contrast
+ */
+async function calculateComplementaryColor(
+  image: sharp.Sharp,
+  extractOptions: { left: number; top: number; width: number; height: number },
+): Promise<{ textColor: string; strokeColor: string; borderColor: string }> {
+  // Extract portion to analyze background color
+  const portion = await image
+    .clone()
+    .extract(extractOptions)
+    .resize(100, 50, { fit: "cover" }) // Resize for faster processing
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+
+  // Calculate average background color
+  let rSum = 0,
+    gSum = 0,
+    bSum = 0;
+  const pixelCount = portion.info.width * portion.info.height;
+  const data = portion.data;
+
+  for (let i = 0; i < data.length; i += 4) {
+    rSum += data[i] || 0;
+    gSum += data[i + 1] || 0;
+    bSum += data[i + 2] || 0;
+  }
+
+  const avgR = Math.floor(rSum / pixelCount);
+  const avgG = Math.floor(gSum / pixelCount);
+  const avgB = Math.floor(bSum / pixelCount);
+
+  // Calculate complementary color (opposite on color wheel)
+  const complementaryR = 255 - avgR;
+  const complementaryG = 255 - avgG;
+  const complementaryB = 255 - avgB;
+
+  // Ensure good contrast by checking luminance
+  const bgLuminance = 0.299 * avgR + 0.587 * avgG + 0.114 * avgB;
+
+  let strokeColor: string;
+  let finalR: number, finalG: number, finalB: number;
+
+  if (bgLuminance < 128) {
+    // Dark background - use bright, playful colors
+    finalR = Math.min(255, complementaryR + 50);
+    finalG = Math.min(255, complementaryG + 50);
+    finalB = Math.min(255, complementaryB + 50);
+    strokeColor = "rgba(0, 0, 0, 0.8)"; // Dark stroke for contrast
+  } else {
+    // Light background - use darker, vibrant colors
+    finalR = Math.max(0, complementaryR - 30);
+    finalG = Math.max(0, complementaryG - 30);
+    finalB = Math.max(0, complementaryB - 30);
+    strokeColor = "rgba(255, 255, 255, 0.8)"; // Light stroke for contrast
+  }
+
+  // Calculate final text luminance and ensure sufficient contrast
+  const textLuminance = 0.299 * finalR + 0.587 * finalG + 0.114 * finalB;
+  const contrastRatio = Math.abs(textLuminance - bgLuminance) / 255;
+
+  // If contrast is too low (less than 0.5), adjust colors to improve it
+  if (contrastRatio < 0.5) {
+    if (bgLuminance < 128) {
+      // Make text even brighter
+      finalR = Math.min(255, finalR + 30);
+      finalG = Math.min(255, finalG + 30);
+      finalB = Math.min(255, finalB + 30);
+    } else {
+      // Make text even darker
+      finalR = Math.max(0, finalR - 30);
+      finalG = Math.max(0, finalG - 30);
+      finalB = Math.max(0, finalB - 30);
+    }
+  }
+
+  const textColor = `rgb(${finalR}, ${finalG}, ${finalB})`;
+  const borderColor = `rgb(${finalR}, ${finalG}, ${finalB})`;
+
+  return { textColor, strokeColor, borderColor };
+}
+
+function registerFont(options: TextOptions) {
+  if (options.fontPath) {
+    // skia-canvas exposes FontLibrary.use; this is not a React hook.
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    FontLibrary.use(options.fontFamily, options.fontPath);
+  }
 }
 
 /**
@@ -122,85 +274,22 @@ export async function addStylizedTextOverlayForPage(
 }
 
 /**
- * Calculate complementary color based on background for good contrast
+ * Measure the total width of a line including character spacing
  */
-async function calculateComplementaryColor(
-  image: sharp.Sharp,
-  extractOptions: { left: number; top: number; width: number; height: number },
-): Promise<{ textColor: string; strokeColor: string; borderColor: string }> {
-  // Extract portion to analyze background color
-  const portion = await image
-    .clone()
-    .extract(extractOptions)
-    .resize(100, 50, { fit: "cover" }) // Resize for faster processing
-    .raw()
-    .toBuffer({ resolveWithObject: true });
+function measureLineWidth(
+  ctx: ReturnType<typeof Canvas.prototype.getContext>,
+  line: string,
+  charSpacing: number,
+): number {
+  const characters = line.split("");
+  let totalWidth = 0;
 
-  // Calculate average background color
-  let rSum = 0,
-    gSum = 0,
-    bSum = 0;
-  const pixelCount = portion.info.width * portion.info.height;
-  const data = portion.data;
+  characters.forEach((char) => {
+    totalWidth += ctx.measureText(char).width;
+  });
+  totalWidth += charSpacing * (characters.length - 1);
 
-  for (let i = 0; i < data.length; i += 4) {
-    rSum += data[i] || 0;
-    gSum += data[i + 1] || 0;
-    bSum += data[i + 2] || 0;
-  }
-
-  const avgR = Math.floor(rSum / pixelCount);
-  const avgG = Math.floor(gSum / pixelCount);
-  const avgB = Math.floor(bSum / pixelCount);
-
-  // Calculate complementary color (opposite on color wheel)
-  const complementaryR = 255 - avgR;
-  const complementaryG = 255 - avgG;
-  const complementaryB = 255 - avgB;
-
-  // Ensure good contrast by checking luminance
-  const bgLuminance = 0.299 * avgR + 0.587 * avgG + 0.114 * avgB;
-
-  let strokeColor: string;
-  let finalR: number, finalG: number, finalB: number;
-
-  if (bgLuminance < 128) {
-    // Dark background - use bright, playful colors
-    finalR = Math.min(255, complementaryR + 50);
-    finalG = Math.min(255, complementaryG + 50);
-    finalB = Math.min(255, complementaryB + 50);
-    strokeColor = "rgba(0, 0, 0, 0.8)"; // Dark stroke for contrast
-  } else {
-    // Light background - use darker, vibrant colors
-    finalR = Math.max(0, complementaryR - 30);
-    finalG = Math.max(0, complementaryG - 30);
-    finalB = Math.max(0, complementaryB - 30);
-    strokeColor = "rgba(255, 255, 255, 0.8)"; // Light stroke for contrast
-  }
-
-  // Calculate final text luminance and ensure sufficient contrast
-  const textLuminance = 0.299 * finalR + 0.587 * finalG + 0.114 * finalB;
-  const contrastRatio = Math.abs(textLuminance - bgLuminance) / 255;
-
-  // If contrast is too low (less than 0.5), adjust colors to improve it
-  if (contrastRatio < 0.5) {
-    if (bgLuminance < 128) {
-      // Make text even brighter
-      finalR = Math.min(255, finalR + 30);
-      finalG = Math.min(255, finalG + 30);
-      finalB = Math.min(255, finalB + 30);
-    } else {
-      // Make text even darker
-      finalR = Math.max(0, finalR - 30);
-      finalG = Math.max(0, finalG - 30);
-      finalB = Math.max(0, finalB - 30);
-    }
-  }
-
-  const textColor = `rgb(${finalR}, ${finalG}, ${finalB})`;
-  const borderColor = `rgb(${finalR}, ${finalG}, ${finalB})`;
-
-  return { textColor, strokeColor, borderColor };
+  return totalWidth;
 }
 
 /**
@@ -356,60 +445,6 @@ export async function addCurvedTitleForPage(
 }
 
 /**
- * Split text into exactly 2 lines at the nearest word boundary to the middle
- */
-function splitTextIntoTwoLines(text: string): string[] {
-  const words = text.split(" ");
-
-  // If only one word, return it as a single line
-  if (words.length <= 1) {
-    return [text];
-  }
-
-  // Find the middle character position
-  const midPoint = text.length / 2;
-
-  // Find the word boundary closest to the middle
-  let currentPos = 0;
-  let bestSplitIndex = 0;
-  let bestDistance = Infinity;
-
-  for (let i = 0; i < words.length - 1; i++) {
-    currentPos += (words[i]?.length || 0) + 1; // +1 for space
-    const distance = Math.abs(currentPos - midPoint);
-    if (distance < bestDistance) {
-      bestDistance = distance;
-      bestSplitIndex = i + 1;
-    }
-  }
-
-  // Split at the best position
-  const line1 = words.slice(0, bestSplitIndex).join(" ");
-  const line2 = words.slice(bestSplitIndex).join(" ");
-
-  return [line1, line2];
-}
-
-/**
- * Measure the total width of a line including character spacing
- */
-function measureLineWidth(
-  ctx: ReturnType<typeof Canvas.prototype.getContext>,
-  line: string,
-  charSpacing: number,
-): number {
-  const characters = line.split("");
-  let totalWidth = 0;
-
-  characters.forEach((char) => {
-    totalWidth += ctx.measureText(char).width;
-  });
-  totalWidth += charSpacing * (characters.length - 1);
-
-  return totalWidth;
-}
-
-/**
  * Adds text to the back cover with a blurred box and complementary border.
  * The box starts at 10% from the top and extends to 45% of the page height.
  */
@@ -538,31 +573,4 @@ export async function addTextBoxForBackCover(
       { input: textBuffer, top: boxTop, left: sidePadding },
     ])
     .toBuffer();
-}
-
-/**
- * Canvas text wrapping logic
- */
-// Helper function to calculate wrapped lines
-function getWrappedLines(
-  ctx: ReturnType<typeof Canvas.prototype.getContext>,
-  text: string,
-  maxWidth: number,
-): string[] {
-  const words = text.split(" ");
-  const lines: string[] = [];
-  let currentLine = words[0] as string;
-
-  for (let i = 1; i < words.length; i++) {
-    const word = words[i] as string;
-    const width = ctx.measureText(currentLine + " " + word).width;
-    if (width < maxWidth) {
-      currentLine += " " + word;
-    } else {
-      lines.push(currentLine);
-      currentLine = word;
-    }
-  }
-  lines.push(currentLine);
-  return lines;
 }

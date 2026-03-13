@@ -1,0 +1,341 @@
+"use client";
+
+import { useMemo, useState, useTransition } from "react";
+import Image from "next/image";
+
+import {
+  generateFinalBackCoverAction,
+  generateFinalCoverAction,
+  generateFinalPageAction,
+  generateFinalPagesBulkAction,
+  generateRawBackCoverAction,
+  generateRawCoverAction,
+  generateRawPageAction,
+  generateRawPagesBulkAction,
+} from "@/app/[locale]/admin/actions/image-jobs";
+import { toImageUrl } from "@/lib/utils/image-url";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
+type GeneratedBookDetail = {
+  book: {
+    id: string;
+    bookProductSlug: string;
+    characterName: string;
+    rawCoverImagePath: string | null;
+    coverImagePath: string | null;
+    rawBackCoverImagePath: string | null;
+    backCoverImagePath: string | null;
+  };
+  pages: Array<{
+    id: string;
+    pageNumber: number;
+    rawImagePath: string | null;
+    imagePath: string | null;
+  }>;
+};
+
+export function GeneratedBookDetailManager({
+  data,
+  locale,
+}: {
+  data: GeneratedBookDetail;
+  locale: string;
+}) {
+  const [selectedPages, setSelectedPages] = useState<number[]>([]);
+  const [isPending, startTransition] = useTransition();
+  const [message, setMessage] = useState<string | null>(null);
+  const allPageNumbers = useMemo(
+    () => data.pages.map((page) => page.pageNumber),
+    [data.pages],
+  );
+
+  const runAction = (fn: () => Promise<void>) => {
+    setMessage(null);
+    startTransition(async () => {
+      try {
+        await fn();
+        setMessage("Done");
+      } catch (error) {
+        setMessage(error instanceof Error ? error.message : "Action failed");
+      }
+    });
+  };
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            {data.book.bookProductSlug} - {data.book.characterName}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="grid gap-2 md:grid-cols-2">
+            <AssetActions
+              title="Cover"
+              rawPath={data.book.rawCoverImagePath}
+              finalPath={data.book.coverImagePath}
+              onGenerateRaw={() =>
+                runAction(() =>
+                  generateRawCoverAction({
+                    generatedBookId: data.book.id,
+                    locale,
+                  }),
+                )
+              }
+              onGenerateFinal={() =>
+                runAction(() =>
+                  generateFinalCoverAction({
+                    generatedBookId: data.book.id,
+                    locale,
+                  }),
+                )
+              }
+              isPending={isPending}
+            />
+            <AssetActions
+              title="Back Cover"
+              rawPath={data.book.rawBackCoverImagePath}
+              finalPath={data.book.backCoverImagePath}
+              onGenerateRaw={() =>
+                runAction(() =>
+                  generateRawBackCoverAction({
+                    generatedBookId: data.book.id,
+                    locale,
+                  }),
+                )
+              }
+              onGenerateFinal={() =>
+                runAction(() =>
+                  generateFinalBackCoverAction({
+                    generatedBookId: data.book.id,
+                    locale,
+                  }),
+                )
+              }
+              isPending={isPending}
+            />
+          </div>
+          {message ? (
+            <p className="text-sm text-muted-foreground">{message}</p>
+          ) : null}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Pages</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setSelectedPages(allPageNumbers)}
+            >
+              Select all
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setSelectedPages([])}
+            >
+              Clear selection
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              disabled={isPending || selectedPages.length === 0}
+              onClick={() =>
+                runAction(() =>
+                  generateRawPagesBulkAction({
+                    generatedBookId: data.book.id,
+                    pageNumbers: selectedPages,
+                    locale,
+                  }),
+                )
+              }
+            >
+              Generate raw for selected
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              disabled={isPending || selectedPages.length === 0}
+              onClick={() =>
+                runAction(() =>
+                  generateFinalPagesBulkAction({
+                    generatedBookId: data.book.id,
+                    pageNumbers: selectedPages,
+                    locale,
+                  }),
+                )
+              }
+            >
+              Generate final for selected
+            </Button>
+          </div>
+
+          <div className="space-y-2">
+            {data.pages.map((page) => {
+              const checked = selectedPages.includes(page.pageNumber);
+              return (
+                <div
+                  key={page.id}
+                  className="flex flex-wrap items-center gap-3 rounded-md border p-3"
+                >
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={(event) => {
+                      if (event.target.checked) {
+                        setSelectedPages((prev) => [...prev, page.pageNumber]);
+                        return;
+                      }
+                      setSelectedPages((prev) =>
+                        prev.filter((number) => number !== page.pageNumber),
+                      );
+                    }}
+                  />
+                  <p className="min-w-20 text-sm font-medium">
+                    Page {page.pageNumber}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    raw: {page.rawImagePath ? "yes" : "no"} | final:{" "}
+                    {page.imagePath ? "yes" : "no"}
+                  </p>
+                  <PreviewImage
+                    src={page.rawImagePath}
+                    alt={`Page ${page.pageNumber} raw`}
+                    label="Raw"
+                  />
+                  <PreviewImage
+                    src={page.imagePath}
+                    alt={`Page ${page.pageNumber} final`}
+                    label="Final"
+                  />
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    disabled={isPending}
+                    onClick={() =>
+                      runAction(() =>
+                        generateRawPageAction({
+                          generatedBookId: data.book.id,
+                          pageNumber: page.pageNumber,
+                          locale,
+                        }),
+                      )
+                    }
+                  >
+                    Generate raw
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    disabled={isPending}
+                    onClick={() =>
+                      runAction(() =>
+                        generateFinalPageAction({
+                          generatedBookId: data.book.id,
+                          pageNumber: page.pageNumber,
+                          locale,
+                        }),
+                      )
+                    }
+                  >
+                    Generate final
+                  </Button>
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function AssetActions({
+  title,
+  rawPath,
+  finalPath,
+  onGenerateRaw,
+  onGenerateFinal,
+  isPending,
+}: {
+  title: string;
+  rawPath: string | null;
+  finalPath: string | null;
+  onGenerateRaw: () => void;
+  onGenerateFinal: () => void;
+  isPending: boolean;
+}) {
+  return (
+    <div className="rounded-md border p-3">
+      <p className="font-medium">{title}</p>
+      <p className="text-xs text-muted-foreground">
+        raw: {rawPath ? "yes" : "no"} | final: {finalPath ? "yes" : "no"}
+      </p>
+      <div className="mt-2 flex gap-2">
+        <PreviewImage src={rawPath} alt={`${title} raw`} label="Raw" />
+        <PreviewImage src={finalPath} alt={`${title} final`} label="Final" />
+      </div>
+      <div className="mt-2 flex gap-2">
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          disabled={isPending}
+          onClick={onGenerateRaw}
+        >
+          Generate raw
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          disabled={isPending}
+          onClick={onGenerateFinal}
+        >
+          Generate final
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function PreviewImage({
+  src,
+  alt,
+  label,
+}: {
+  src: string | null;
+  alt: string;
+  label: string;
+}) {
+  console.log("grigor", src, toImageUrl(src, { fallbackPath: "/file.svg" }));
+  return (
+    <div className="space-y-1">
+      <p className="text-[10px] text-muted-foreground">{label}</p>
+      {toImageUrl(src, { fallbackPath: "/file.svg" }) !== "/file.svg" ? (
+        <Image
+          src={toImageUrl(src, { fallbackPath: "/file.svg" })}
+          alt={alt}
+          width={64}
+          height={64}
+          unoptimized
+          className="h-16 w-16 rounded border object-cover"
+        />
+      ) : (
+        <div className="bg-muted text-muted-foreground flex h-16 w-16 items-center justify-center rounded border text-[10px]">
+          no image
+        </div>
+      )}
+    </div>
+  );
+}

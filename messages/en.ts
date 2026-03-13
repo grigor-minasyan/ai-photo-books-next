@@ -62,6 +62,35 @@ const en = {
   },
   AdminPage: {
     title: "Admin dashboard",
+    sections: {
+      prompts: {
+        title: "Prompt templates",
+        cta: "Manage prompts",
+      },
+      books: {
+        title: "Book templates",
+        cta: "Manage books",
+      },
+      generatedBooks: {
+        title: "Generated books",
+        cta: "Manage generated books",
+      },
+    },
+  },
+  AdminPromptsPage: {
+    title: "Prompt management",
+  },
+  AdminBooksPage: {
+    title: "Book template management",
+  },
+  AdminBookDetailPage: {
+    title: "Book template details",
+  },
+  AdminGeneratedBooksPage: {
+    title: "Generated books management",
+  },
+  AdminGeneratedBookDetailPage: {
+    title: "Generated book details",
   },
 };
 
