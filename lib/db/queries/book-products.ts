@@ -208,7 +208,10 @@ export async function getBookProductBySlug(
     rawCoverImagePath: productRow.rawCoverImagePath,
     coverImagePath: normalizeProductImagePath(productRow.rawCoverImagePath),
     templatePages,
-    sourcePages,
+    sourcePages: sourcePages.map((page) => ({
+      ...page,
+      imagePath: normalizeProductImagePath(page.imagePath),
+    })),
     variationPricing,
   };
 }
